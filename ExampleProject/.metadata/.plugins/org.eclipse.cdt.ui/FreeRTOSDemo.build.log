@@ -1,0 +1,113 @@
+
+**** Build of configuration Debug for project FreeRTOSDemo ****
+
+"C:\\ti\\ccs920\\ccs\\utils\\bin\\gmake" -k -j 8 all -O 
+ 
+Building file: "../croutine.c"
+Invoking: ARM Compiler
+"C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --include_path="C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include" --include_path="C:/ti/TivaWare_C_Series-2.1.4.178" --define=ccs="ccs" --define=PART_TM4C123GH6PM -g --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="croutine.d_raw"  "../croutine.c"
+ 
+>> Compilation failure
+subdir_rules.mk:9: recipe for target 'croutine.obj' failed
+"../croutine.c", line 28: fatal error #1965: cannot open source file "FreeRTOS.h"
+1 catastrophic error detected in the compilation of "../croutine.c".
+Compilation terminated.
+gmake: *** [croutine.obj] Error 1
+Building file: "../event_groups.c"
+Invoking: ARM Compiler
+"C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --include_path="C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include" --include_path="C:/ti/TivaWare_C_Series-2.1.4.178" --define=ccs="ccs" --define=PART_TM4C123GH6PM -g --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="event_groups.d_raw"  "../event_groups.c"
+ 
+>> Compilation failure
+subdir_rules.mk:9: recipe for target 'event_groups.obj' failed
+"../event_groups.c", line 37: fatal error #1965: cannot open source file "FreeRTOS.h"
+1 catastrophic error detected in the compilation of "../event_groups.c".
+Compilation terminated.
+gmake: *** [event_groups.obj] Error 1
+Building file: "../list.c"
+Invoking: ARM Compiler
+"C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --include_path="C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include" --include_path="C:/ti/TivaWare_C_Series-2.1.4.178" --define=ccs="ccs" --define=PART_TM4C123GH6PM -g --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="list.d_raw"  "../list.c"
+ 
+>> Compilation failure
+subdir_rules.mk:9: recipe for target 'list.obj' failed
+"../list.c", line 30: fatal error #1965: cannot open source file "FreeRTOS.h"
+1 catastrophic error detected in the compilation of "../list.c".
+Compilation terminated.
+gmake: *** [list.obj] Error 1
+Building file: "../queue.c"
+Invoking: ARM Compiler
+"C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --include_path="C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include" --include_path="C:/ti/TivaWare_C_Series-2.1.4.178" --define=ccs="ccs" --define=PART_TM4C123GH6PM -g --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="queue.d_raw"  "../queue.c"
+ 
+>> Compilation failure
+subdir_rules.mk:9: recipe for target 'queue.obj' failed
+"../queue.c", line 36: fatal error #1965: cannot open source file "FreeRTOS.h"
+1 catastrophic error detected in the compilation of "../queue.c".
+Compilation terminated.
+gmake: *** [queue.obj] Error 1
+Building file: "../main.c"
+Invoking: ARM Compiler
+"C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --include_path="C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include" --include_path="C:/ti/TivaWare_C_Series-2.1.4.178" --define=ccs="ccs" --define=PART_TM4C123GH6PM -g --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="main.d_raw"  "../main.c"
+ 
+>> Compilation failure
+subdir_rules.mk:9: recipe for target 'main.obj' failed
+"../main.c", line 15: fatal error #1965: cannot open source file "FreeRTOS.h"
+1 catastrophic error detected in the compilation of "../main.c".
+Compilation terminated.
+gmake: *** [main.obj] Error 1
+Building file: "../stream_buffer.c"
+Invoking: ARM Compiler
+"C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --include_path="C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include" --include_path="C:/ti/TivaWare_C_Series-2.1.4.178" --define=ccs="ccs" --define=PART_TM4C123GH6PM -g --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="stream_buffer.d_raw"  "../stream_buffer.c"
+ 
+>> Compilation failure
+subdir_rules.mk:9: recipe for target 'stream_buffer.obj' failed
+"../stream_buffer.c", line 38: fatal error #1965: cannot open source file "FreeRTOS.h"
+1 catastrophic error detected in the compilation of "../stream_buffer.c".
+Compilation terminated.
+gmake: *** [stream_buffer.obj] Error 1
+Building file: "../tasks.c"
+Invoking: ARM Compiler
+"C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --include_path="C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include" --include_path="C:/ti/TivaWare_C_Series-2.1.4.178" --define=ccs="ccs" --define=PART_TM4C123GH6PM -g --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="tasks.d_raw"  "../tasks.c"
+ 
+>> Compilation failure
+subdir_rules.mk:9: recipe for target 'tasks.obj' failed
+"../tasks.c", line 38: fatal error #1965: cannot open source file "FreeRTOS.h"
+1 catastrophic error detected in the compilation of "../tasks.c".
+Compilation terminated.
+gmake: *** [tasks.obj] Error 1
+Building file: "../timers.c"
+Invoking: ARM Compiler
+"C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --include_path="C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include" --include_path="C:/ti/TivaWare_C_Series-2.1.4.178" --define=ccs="ccs" --define=PART_TM4C123GH6PM -g --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="timers.d_raw"  "../timers.c"
+ 
+>> Compilation failure
+subdir_rules.mk:9: recipe for target 'timers.obj' failed
+"../timers.c", line 36: fatal error #1965: cannot open source file "FreeRTOS.h"
+1 catastrophic error detected in the compilation of "../timers.c".
+Compilation terminated.
+gmake: *** [timers.obj] Error 1
+Building file: "../portable/CCS/ARM_CM4F/port.c"
+Invoking: ARM Compiler
+"C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --include_path="C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include" --include_path="C:/ti/TivaWare_C_Series-2.1.4.178" --define=ccs="ccs" --define=PART_TM4C123GH6PM -g --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="portable/CCS/ARM_CM4F/port.d_raw" --obj_directory="portable/CCS/ARM_CM4F"  "../portable/CCS/ARM_CM4F/port.c"
+ 
+>> Compilation failure
+portable/CCS/ARM_CM4F/subdir_rules.mk:9: recipe for target 'portable/CCS/ARM_CM4F/port.obj' failed
+"../portable/CCS/ARM_CM4F/port.c", line 33: fatal error #1965: cannot open source file "FreeRTOS.h"
+1 catastrophic error detected in the compilation of "../portable/CCS/ARM_CM4F/port.c".
+Compilation terminated.
+gmake: *** [portable/CCS/ARM_CM4F/port.obj] Error 1
+Building file: "../portable/MemMang/heap_2.c"
+Invoking: ARM Compiler
+"C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --include_path="C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include" --include_path="C:/ti/TivaWare_C_Series-2.1.4.178" --define=ccs="ccs" --define=PART_TM4C123GH6PM -g --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="portable/MemMang/heap_2.d_raw" --obj_directory="portable/MemMang"  "../portable/MemMang/heap_2.c"
+ 
+>> Compilation failure
+portable/MemMang/subdir_rules.mk:9: recipe for target 'portable/MemMang/heap_2.obj' failed
+"../portable/MemMang/heap_2.c", line 44: fatal error #1965: cannot open source file "FreeRTOS.h"
+1 catastrophic error detected in the compilation of "../portable/MemMang/heap_2.c".
+Compilation terminated.
+gmake: *** [portable/MemMang/heap_2.obj] Error 1
+Building file: "../portable/CCS/ARM_CM4F/portasm.asm"
+Invoking: ARM Compiler
+"C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=FPv4SPD16 -me --include_path="C:/ti/ccs920/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include" --include_path="C:/ti/TivaWare_C_Series-2.1.4.178" --define=ccs="ccs" --define=PART_TM4C123GH6PM -g --gcc --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --preproc_with_compile --preproc_dependency="portable/CCS/ARM_CM4F/portasm.d_raw" --obj_directory="portable/CCS/ARM_CM4F"  "../portable/CCS/ARM_CM4F/portasm.asm"
+Finished building: "../portable/CCS/ARM_CM4F/portasm.asm"
+ 
+gmake: Target 'all' not remade because of errors.
+
+**** Build Finished ****
