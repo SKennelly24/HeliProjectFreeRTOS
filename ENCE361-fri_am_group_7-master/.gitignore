@@ -1,0 +1,8 @@
+*.out
+*.obj
+*.d
+.jxbrowser-data/
+.metadata/
+RemoteSystemsTempFiles/
+Debug/
+.vscode/
