@@ -66,7 +66,7 @@ static const int ALT_BUF_SIZE = 16;
 /**
  * We are using ADC0 so we set up the base and peripheral
  */
-static const int ADC_BASE = ADC0_BASE;
+static const uint32_t ADC_BASE = ADC0_BASE;
 static const uint32_t ADC_PERIPH = SYSCTL_PERIPH_ADC0;
 
 /**
@@ -151,6 +151,7 @@ void alt_init_adc(void)
 {
     // The ADC0 peripheral must be enabled for configuration and use.
     SysCtlPeripheralEnable(ADC_PERIPH);
+    while (!SysCtlPeripheralReady(ADC_PERIPH));
 
     // Enable sample sequence 3 with a processor signal trigger.  Sequence 3
     // will do a single sample when the processor sends a signal to start the
@@ -171,10 +172,10 @@ void alt_init_adc(void)
     ADCSequenceEnable(ADC_BASE, ADC_SEQUENCE);
 
     // Register the interrupt handler
-    ADCIntRegister(ADC_BASE, ADC_SEQUENCE, alt_adc_int_handler);
+    //ADCIntRegister(ADC_BASE, ADC_SEQUENCE, alt_adc_int_handler);
 
     // Enable interrupts for ADC0 sequence 3 (clears any outstanding interrupts)
-    ADCIntEnable(ADC_BASE, ADC_SEQUENCE);
+    //ADCIntEnable(ADC_BASE, ADC_SEQUENCE);
 }
 
 /**
