@@ -19,6 +19,27 @@
  * the altitude values.
  * 
  ******************************************************************************/
+/*******************************************************************************
+ *
+ * altitude.c
+ *
+ * ENEL361 Helicopter Project
+ * Friday Morning, Group 7
+ *
+ * Written by:
+ *  - Manu Hamblyn  <mfb31<@uclive.ac.nz>   95140875
+ *  - Will Cowper   <wgc22@uclive.ac.nz>    81163265
+ *  - Jesse Sheehan <jps111@uclive.ac.nz>   53366509
+ *
+ * This file contains portions of code that written by P.J. Bones. These portions are noted in the comments.
+ *
+ * Description:
+ * This module contains functionality required for calculating the mean altitude
+ * as a raw value and as a percentage of the overall height.
+ * Functions are provided to initialise, calibrate, update and return
+ * the altitude values.
+ *
+ ******************************************************************************/
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -29,11 +50,14 @@
 #include "driverlib/sysctl.h"
 
 #include "altitude.h"
-#include "circBufT.h"
+#include "circBuffT.h"
 //#include "kernel.h"
-#include "mutex.h"
+//#include "mutex.h"
 #include "utils.h"
 
+
+/* May change to use defines instead of static const ints
+ * */
 /**
  * The size of the buffer used to store the raw ADC values. This needs to be big enough that outliers in the data cannot affect the calculated mean in an adverse way.
  */
@@ -64,8 +88,9 @@ static const int ALT_DELTA = 993;
 
 /**
  * The size of the settling buffer.
- */
+ *
 static const int ALT_SETTLING_BUF_SIZE = 10;
+*/
 
 /**
  * The maximum difference between the minimum and maximum values (as a percentage)
@@ -77,16 +102,6 @@ static const int ALT_SETTLING_MARGIN = 2;
  * The circular buffer used to store the raw ADC values for calculating the mean.
  */
 static circBuf_t g_circ_buffer;
-
-/**
- * The mutex for the circular buffer.
- */
-static Mutex g_circ_buffer_mutex;
-
-/**
- * The circular buffer used to store ALT_SETTLING_BUF_SIZE percentage values.
- */
-static circBuf_t g_settling_buffer;
 
 /**
  * The reference altitude. This is updated when calling the alt_calibrate function. This is required for calculating the altitude as a percentage.
@@ -109,11 +124,6 @@ static int16_t g_alt_percent;
 static bool g_has_been_calibrated = false;
 
 /**
- * Stores the frequency of the kernel task. We need this to determine if the buffer is full.
- */
-static uint16_t g_kernel_task_frequency = USHRT_MAX;
-
-/**
  * (Original Code by P.J. Bones)
  * The handler for the ADC conversion complete interrupt.
  * Writes to the circular buffer.
@@ -127,9 +137,7 @@ void alt_adc_int_handler(void)
     ADCSequenceDataGet(ADC_BASE, ADC_SEQUENCE, &value);
 
     // Place it in the circular buffer (advancing write index)
-    mutex_lock(g_circ_buffer_mutex);
     writeCircBuf(&g_circ_buffer, value);
-    mutex_unlock(g_circ_buffer_mutex);
 
     // Clean up, clearing the interrupt
     ADCIntClear(ADC_BASE, ADC_SEQUENCE);
@@ -173,7 +181,7 @@ void alt_init_adc(void)
  * (Original code by P.J. Bones)
  * The interrupt handler for the for SysTick interrupt.
  */
-void alt_process_adc(void *pvParameters)
+void alt_process_adc(void)
 {
     /*
     // removing the check!!! for test!
@@ -193,10 +201,9 @@ void alt_init(void)
 
     // initialise the circular buffers
     initCircBuf(&g_circ_buffer, ALT_BUF_SIZE);
-    initCircBuf(&g_settling_buffer, ALT_SETTLING_BUF_SIZE);
 }
 
-void alt_update(KernelTask* t_task)
+void alt_update(void)
 {
     int32_t sum;
     uint16_t i;
@@ -204,7 +211,7 @@ void alt_update(KernelTask* t_task)
     // add up all the values in the circular buffer
     sum = 0;
 
-    mutex_wait(g_circ_buffer_mutex);
+   // mutex_wait(g_circ_buffer_mutex);
     for (i = 0; i < ALT_BUF_SIZE; i++)
     {
         sum = sum + readCircBuf(&g_circ_buffer);
@@ -241,12 +248,12 @@ bool alt_has_been_calibrated(void)
     return g_has_been_calibrated;
 }
 
-bool alt_is_buffer_full(void)
+/*bool alt_is_buffer_full(void)
 {
     // the buffer is full if the number of ticks performed is greater than the frequency of the
     // altitude's kernel task
     return (kernel_get_systick_count() > g_kernel_task_frequency);
-}
+}*/
 
 void alt_reset_calibration_state(void)
 {

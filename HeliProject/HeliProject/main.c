@@ -17,6 +17,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
@@ -28,11 +29,12 @@
 
 
 // Heli modules
-#include "display.h"
+//#include "display.h"
 #include "utils.h"
+#include "altitude.h"
 
 /*
-#include "altitude.h"
+#
 #include "clock.h"
 #include "control.h"
 #include "config.h"
@@ -95,6 +97,21 @@ void disp_Update(void *pvParameters)
     // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
+// Blinky Red function
+void GetAltitude(void *pvParameters)
+{
+
+
+    while (1) {
+        alt_process_adc();
+        alt_update();
+        int16_t height = alt_get();
+        printf("Altitude %d", height);
+        vTaskDelay(1000 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
+    }
+    // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
+}
+
 
 
 int main(void)
@@ -122,6 +139,10 @@ int main(void)
     GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0); // off by default
 
 
+
+    //Initialise ADC
+    alt_init();
+
     // Initialise display
     disp_init();
 
@@ -137,6 +158,10 @@ int main(void)
     if (pdTRUE != xTaskCreate(BlinkRedLED, "Blink Red", 32, (void *)1, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
+
+    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 32, (void *)1, 4, NULL)) {
+            while(1);   // Oh no! Must not have had enough memory to create the task.
+        }
 /*
     if (pdTRUE != xTaskCreate(disp_Update, "Display Update", 32, (void *)1, 4, NULL)) {
                 while(1);   // Oh no! Must not have had enough memory to create the task.

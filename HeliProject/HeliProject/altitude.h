@@ -42,7 +42,7 @@ void alt_init(void);
 /**
  * Calculates the mean value of the altitude, both the raw resolution and the percentage values. This should be called before one wants to use the altitude values in any other calculations.
  */
-void alt_update(void *pvParameters);
+void alt_update();
 
 /**
  * Calibrates the altitude to the current mean value.
@@ -68,7 +68,7 @@ bool alt_is_buffer_full(void);
 /**
  * Performs an ADC conversion.
  */
-void alt_process_adc(void *pvParameters);
+void alt_process_adc(void);
 
 /**
  * Resets the calibration state of the altitude.
