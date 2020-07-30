@@ -100,13 +100,20 @@ void disp_Update(void *pvParameters)
 // Blinky Red function
 void GetAltitude(void *pvParameters)
 {
-
+    uint8_t tick_from_start = 0;
 
     while (1) {
-        alt_process_adc();
-        alt_update();
-        int16_t height = alt_get();
-        printf("Altitude %d", height);
+        if (alt_has_been_calibrated()) {
+            alt_process_adc();
+            int32_t height = alt_update();
+            printf("Altitude %d\r\n", height);
+        } else {
+            tick_from_start++;
+            if (tick_from_start > 16) {
+                alt_calibrate();
+            }
+        }
+
         vTaskDelay(1000 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
     }
     // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
@@ -118,13 +125,11 @@ int main(void)
 {
     // disable all interrupts
     IntMasterDisable();
-    //utils_wait_for_seconds(5);
 
     // Set the clock rate to 80 MHz
     SysCtlClockSet (SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
 
                     SYSCTL_XTAL_16MHZ);
-   // utils_wait_for_seconds(5);
 
 
     // For LED blinky task - initialize GPIO port F and then pin #1 (red) for output
@@ -142,7 +147,7 @@ int main(void)
     GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0); // off by default
 
 
-    utils_wait_for_seconds(5);
+   // utils_wait_for_seconds(5);
 
 
     //Initialise ADC
@@ -164,9 +169,9 @@ int main(void)
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    /*if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 1024, (void *)1, 4, NULL)) {
-            while(1);   // Oh no! Must not have had enough memory to create the task.
-        }*/
+    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 1024, (void *)1, 4, NULL)) {
+        while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
 
     /*if (pdTRUE != xTaskCreate(disp_Update, "Display Update", 32, (void *)1, 4, NULL)) {
                 while(1);   // Oh no! Must not have had enough memory to create the task.

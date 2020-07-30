@@ -56,6 +56,9 @@
 #include "utils.h"
 
 
+#define ADC_RANGE 1241
+#define ONE_HUNDRED_PERCENT 100
+
 /* May change to use defines instead of static const ints
  * */
 /**
@@ -172,10 +175,10 @@ void alt_init_adc(void)
     ADCSequenceEnable(ADC_BASE, ADC_SEQUENCE);
 
     // Register the interrupt handler
-    //ADCIntRegister(ADC_BASE, ADC_SEQUENCE, alt_adc_int_handler);
+    ADCIntRegister(ADC_BASE, ADC_SEQUENCE, alt_adc_int_handler);
 
     // Enable interrupts for ADC0 sequence 3 (clears any outstanding interrupts)
-    //ADCIntEnable(ADC_BASE, ADC_SEQUENCE);
+    ADCIntEnable(ADC_BASE, ADC_SEQUENCE);
 }
 
 /**
@@ -203,26 +206,54 @@ void alt_init(void)
     // initialise the circular buffers
     initCircBuf(&g_circ_buffer, ALT_BUF_SIZE);
 }
+//******************************************************
+//Given the sample mean ADC returns the altitude percent
+//******************************************************
+int32_t getAltitudePercent(int32_t sample_mean_adc)
+{
+    int32_t adc_change;
+    //Checks lower boundary for ADC value
+    if (g_alt_ref < sample_mean_adc)
+    {
+        adc_change = 0;
+    }
+    //Calculates the difference in reference ADC height and sample ADC height
+    else
+    {
+        adc_change = (g_alt_ref - sample_mean_adc);
+    }
+    //Checks upper boundary of ADC in percentage
+    if (((adc_change * ONE_HUNDRED_PERCENT) / ADC_RANGE) > ONE_HUNDRED_PERCENT)
+    {
+        return ONE_HUNDRED_PERCENT;
+    }
+    //Converts ADC to percentage
+    else
+    {
+        return ((adc_change * 100) / ADC_RANGE);
+    }
+}
 
-void alt_update(void)
+
+int32_t alt_update(void)
 {
     int32_t sum;
     uint16_t i;
+    int32_t alt_raw;
 
     // add up all the values in the circular buffer
     sum = 0;
 
-   // mutex_wait(g_circ_buffer_mutex);
     for (i = 0; i < ALT_BUF_SIZE; i++)
     {
         sum = sum + readCircBuf(&g_circ_buffer);
     }
 
     // calculate the mean of the data in the circular buffer
-    g_alt_raw = (2 * sum + ALT_BUF_SIZE) / (2 * ALT_BUF_SIZE);
+    alt_raw = (2 * sum + ALT_BUF_SIZE) / (2 * ALT_BUF_SIZE);
 
     // calculate the percentage mean
-    g_alt_percent = (int16_t)((((int32_t)g_alt_ref - (int32_t)g_alt_raw) * (int32_t)100) / (int32_t)ALT_DELTA);
+    return getAltitudePercent(alt_raw);
 }
 
 /*
