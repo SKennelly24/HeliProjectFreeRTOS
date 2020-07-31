@@ -21,12 +21,11 @@
 
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
-
+// Tiva modules
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
-
 
 // Heli modules
 #include "display.h"
@@ -88,16 +87,6 @@ void BlinkRedLED(void *pvParameters)
 
 
 // Blinky Red function
-void disp_Update(void *pvParameters)
-{
-
-
-    vTaskDelay(1000 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
-
-    // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
-}
-
-// Blinky Red function
 void GetAltitude(void *pvParameters)
 {
     uint8_t tick_from_start = 0;
@@ -119,7 +108,31 @@ void GetAltitude(void *pvParameters)
     // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
+void disp_Values(void *pvParameters)
+{
+    while (1) {
+        char string[17];
 
+        //usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
+        usnprintf(string, sizeof(string), "Main Duty: %4d%%", get_rand_percent());
+        OLEDStringDraw(string, 0, 0);
+
+        //usnprintf(string, sizeof(string), "Tail Duty: %4d%%", pwm_get_tail_duty());
+        usnprintf(string, sizeof(string), "Tail Duty: %4d%%", get_rand_percent());
+        OLEDStringDraw(string, 0, 1);
+
+        //usnprintf(string, sizeof(string), "      Yaw: %4d%c", yaw_get(), DISP_SYMBOL_DEGREES);
+        usnprintf(string, sizeof(string), "      Yaw: %4d%c", get_rand_yaw(), DISP_SYMBOL_DEGREES);
+        OLEDStringDraw(string, 0, 2);
+
+        //usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
+        usnprintf(string, sizeof(string), " Altitude: %4d%%", get_rand_percent());
+        OLEDStringDraw(string, 0, 3);
+
+        vTaskDelay(2000 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
+        }
+        // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
+}
 
 int main(void)
 {
@@ -173,10 +186,9 @@ int main(void)
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    /*if (pdTRUE != xTaskCreate(disp_Update, "Display Update", 32, (void *)1, 4, NULL)) {
+    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 32, (void *)1, 4, NULL)) {
                 while(1);   // Oh no! Must not have had enough memory to create the task.
-    }*/
-
+    }
 
     vTaskStartScheduler();  // Start FreeRTOS!!
 

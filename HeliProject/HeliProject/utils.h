@@ -69,4 +69,8 @@ void utils_wait_for_seconds(uint32_t t_delay);
  */
 #define WE_STILL_HAVENT_GOTTEN_OUR_MIDTERM_TEST_RESULTS_BACK false
 
+int get_rand_percent();
+
+int get_rand_yaw();
+
 #endif /* UTILS_H_ */

@@ -22,9 +22,10 @@
  * project.
  * 
  ******************************************************************************/
-
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "driverlib/sysctl.h"
 
@@ -42,4 +43,14 @@
 void utils_wait_for_seconds(uint32_t t_delay)
 {
     SysCtlDelay((SysCtlClockGet() * t_delay) / UTILS_SECOND_DELAY_COEFFICIENT);
+}
+
+int get_rand_percent()
+{
+    return ( (int) (rand() %100) );
+}
+
+int get_rand_yaw()
+{
+    return ( (int) (rand() %360) );
 }
