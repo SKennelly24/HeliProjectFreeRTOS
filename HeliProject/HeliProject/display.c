@@ -41,7 +41,7 @@
 /**
  * Bytecode for rendering degree symbol on the display
  */
-static const int DISP_SYMBOL_DEGREES = 0x60;
+//static const int DISP_SYMBOL_DEGREES = 0x60;
 
 /**
  * Enum of all states the display can be in. Cycled by pressing BTN2
