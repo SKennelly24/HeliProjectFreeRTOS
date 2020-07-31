@@ -58,48 +58,11 @@
 
 #define ADC_RANGE 1241
 #define ONE_HUNDRED_PERCENT 100
-
-/* May change to use defines instead of static const ints
- * */
-/**
- * The size of the buffer used to store the raw ADC values. This needs to be big enough that outliers in the data cannot affect the calculated mean in an adverse way.
- */
-static const int ALT_BUF_SIZE = 16;
-
-/**
- * We are using ADC0 so we set up the base and peripheral
- */
-static const uint32_t ADC_BASE = ADC0_BASE;
-static const uint32_t ADC_PERIPH = SYSCTL_PERIPH_ADC0;
-
-/**
- * We want sequence 3, step 0 of ADC0
- */
-static const int ADC_SEQUENCE = 3;
-static const int ADC_STEP = 0;
-
-/**
- * The ideal resolution delta for a helicopter rig. This value may change depending on which helicopter rig is used. The ideal value is calculated as follows:
- * 
- * When the helicopter changes its height from landed (0% altitude) to full height (100% altitude) there is a voltage drop of 0.8 V. 
- * 
- * Because we are using a 12-bit ADC, that the maximum value we can read from the ADC is 2^12 - 1 (4095). The Tiva board uses 3.3 V as its supply voltage, so a resolution of 4095 corresponds to 3.3 V.
- * 
- * Hence the difference in 0.8 V corresponds to 4095 * 0.8 / 3.3 (993).
- */
-static const int ALT_DELTA = 993;
-
-/**
- * The size of the settling buffer.
- *
-static const int ALT_SETTLING_BUF_SIZE = 10;
-*/
-
-/**
- * The maximum difference between the minimum and maximum values (as a percentage)
- * of the settling buffer for the alt_is_settled() to return true.
- */
-static const int ALT_SETTLING_MARGIN = 2;
+#define ALT_BUF_SIZE 16 //The size of the buffer used to store the raw ADC values
+#define ADC_BASE ADC0_BASE
+#define ADC_PERIPH SYSCTL_PERIPH_ADC0
+#define ADC_SEQUENCE 3
+#define ADC_STEP 0
 
 /**
  * The circular buffer used to store the raw ADC values for calculating the mean.
@@ -110,11 +73,6 @@ static circBuf_t g_circ_buffer;
  * The reference altitude. This is updated when calling the alt_calibrate function. This is required for calculating the altitude as a percentage.
  */
 static uint16_t g_alt_ref;
-
-/**
- * The mean altitude. This is updated when the `void alt_update()` function is called.
- */
-static uint32_t g_alt_raw;
 
 /**
  * The mean altitude as a percentage of full height. This is updated when the `void alt_update()` function is called.
@@ -256,13 +214,6 @@ int16_t alt_update(void)
     return g_alt_percent;
 }
 
-/*
-void alt_update_settling(KernelTask* t_task)
-{
-    // write the current altitude (as a percentage) to the settling buffer.
-    writeCircBuf(&g_settling_buffer, g_alt_percent);
-}
-*/
 
 void alt_calibrate(int32_t alt_raw)
 {
@@ -280,12 +231,6 @@ bool alt_has_been_calibrated(void)
     return g_has_been_calibrated;
 }
 
-/*bool alt_is_buffer_full(void)
-{
-    // the buffer is full if the number of ticks performed is greater than the frequency of the
-    // altitude's kernel task
-    return (kernel_get_systick_count() > g_kernel_task_frequency);
-}*/
 
 void alt_reset_calibration_state(void)
 {
@@ -293,42 +238,4 @@ void alt_reset_calibration_state(void)
 }
 
 
-/**
- * Returns true if the yaw has "settled".
- */
-/*
-bool alt_is_settled(void)
-{
-    return getRangeCircBuf(&g_settling_buffer) <= ALT_SETTLING_MARGIN * 2;
-}
-*/
 
-/**
- * Returns the value that the altitude has settled around
- */
-/*
-int32_t alt_get_settled(void)
-{
-    if (alt_is_settled()) {
-        return getSmallestCircBuf(&g_settling_buffer) + ALT_SETTLING_MARGIN;
-    }
-    return -1;
-}
-*/
-
-/**
- * Returns true if the altitude is settled around a particular value.
- */
-/*
-bool alt_is_settled_around(int32_t t_value)
-{
-    if (alt_is_settled())
-    {
-        return range(alt_get_settled(), t_value - ALT_SETTLING_MARGIN, t_value + ALT_SETTLING_MARGIN);
-    }
-    else
-    {
-        return false;
-    }
-}
-*/
