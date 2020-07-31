@@ -54,7 +54,7 @@
 //#include "kernel.h"
 //#include "mutex.h"
 #include "utils.h"
-
+#include <stdio.h>
 
 #define ADC_RANGE 1241
 #define ONE_HUNDRED_PERCENT 100
@@ -126,6 +126,8 @@ static int16_t g_alt_percent;
  */
 static bool g_has_been_calibrated = false;
 
+static int16_t g_conversions = 0;
+
 /**
  * (Original Code by P.J. Bones)
  * The handler for the ADC conversion complete interrupt.
@@ -187,13 +189,7 @@ void alt_init_adc(void)
  */
 void alt_process_adc(void)
 {
-    /*
-    // removing the check!!! for test!
-    if (g_kernel_task_frequency == USHRT_MAX)
-    {
-        g_kernel_task_frequency = t_task->frequency;
-    }
-    */
+    g_conversions++;
     // Initiate a conversion
     ADCProcessorTrigger(ADC_BASE, ADC_SEQUENCE);
 }
@@ -235,7 +231,7 @@ int32_t getAltitudePercent(int32_t sample_mean_adc)
 }
 
 
-int32_t alt_update(void)
+int16_t alt_update(void)
 {
     int32_t sum;
     uint16_t i;
@@ -252,8 +248,12 @@ int32_t alt_update(void)
     // calculate the mean of the data in the circular buffer
     alt_raw = (2 * sum + ALT_BUF_SIZE) / (2 * ALT_BUF_SIZE);
 
-    // calculate the percentage mean
-    return getAltitudePercent(alt_raw);
+    if (alt_has_been_calibrated()) {
+    } else if (g_conversions > ALT_BUF_SIZE) {
+        alt_calibrate(alt_raw);
+    }
+    g_alt_percent = getAltitudePercent(alt_raw);
+    return g_alt_percent;
 }
 
 /*
@@ -264,9 +264,9 @@ void alt_update_settling(KernelTask* t_task)
 }
 */
 
-void alt_calibrate(void)
+void alt_calibrate(int32_t alt_raw)
 {
-    g_alt_ref = g_alt_raw;
+    g_alt_ref = alt_raw;
     g_has_been_calibrated = true;
 }
 

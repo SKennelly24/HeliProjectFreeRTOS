@@ -42,13 +42,13 @@ void alt_init(void);
 /**
  * Calculates the mean value of the altitude, both the raw resolution and the percentage values. This should be called before one wants to use the altitude values in any other calculations.
  */
-int32_t alt_update();
+int16_t alt_update();
 
 /**
  * Calibrates the altitude to the current mean value.
  * This must be called before calling `void alt_update(void)`.
  */
-void alt_calibrate(void);
+void alt_calibrate(int32_t alt_raw);
 
 /**
  * Returns the mean altitude as a percentage (usually from 0 - 100). This value can be less than 0 or greater than 100.

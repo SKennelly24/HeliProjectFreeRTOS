@@ -89,21 +89,11 @@ void BlinkRedLED(void *pvParameters)
 // Blinky Red function
 void GetAltitude(void *pvParameters)
 {
-    uint8_t tick_from_start = 0;
 
     while (1) {
-        if (alt_has_been_calibrated()) {
-            alt_process_adc();
-            int32_t height = alt_update();
-            printf("Altitude %d\r\n", height);
-        } else {
-            tick_from_start++;
-            if (tick_from_start > 16) {
-                alt_calibrate();
-            }
-        }
-
-        vTaskDelay(1000 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
+        alt_process_adc();
+        int32_t height = alt_update();
+        vTaskDelay(100 / portTICK_RATE_MS);  //  Current frequency is
     }
     // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
@@ -126,7 +116,7 @@ void disp_Values(void *pvParameters)
         OLEDStringDraw(string, 0, 2);
 
         //usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
-        usnprintf(string, sizeof(string), " Altitude: %4d%%", get_rand_percent());
+        usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
         OLEDStringDraw(string, 0, 3);
 
         vTaskDelay(2000 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
