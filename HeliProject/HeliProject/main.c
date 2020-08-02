@@ -19,18 +19,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+// Tiva / M4 modules
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
-// Tiva modules
+#include "inc/hw_ints.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
+#include "driverlib/uart.h"
+#include "driverlib/pwm.h"
+#include "utils/ustdlib.h"
 
 // Heli modules
 #include "display.h"
 #include "utils.h"
 #include "altitude.h"
+#include "uart.h"
+#include "pwm.h"
 
 /*
 #
@@ -38,13 +44,11 @@
 #include "control.h"
 #include "config.h"
 
-#include "flight_mode.h"
 #include "input.h"
 #include "kernel.h"
-#include "pwm.h"
-#include "setpoint.h"
-#include "uart.h"
 
+#include "setpoint.h"
+#include "flight_mode.h"
 #include "yaw.h"
 */
 
@@ -59,6 +63,21 @@
  */
 static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
 
+/**
+ * Buffer settings for UART
+ */
+static const int UART_INPUT_BUFFER_SIZE = 40;
+static char *g_buffer;
+
+/**
+ * Enum for status of flight_mode
+ * Finite State Machine
+ */
+enum flight_mode_state_e { LANDED,
+                                  TAKE_OFF,
+                                  IN_FLIGHT,
+                                  LANDING };
+typedef enum flight_mode_state_e FlightModeState;
 
 // Blinky Red function
 void BlinkRedLED(void *pvParameters)
@@ -98,30 +117,64 @@ void GetAltitude(void *pvParameters)
     // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
+// OLED Display Updater task
 void disp_Values(void *pvParameters)
 {
     while (1) {
         char string[17];
 
-        //usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
-        usnprintf(string, sizeof(string), "Main Duty: %4d%%", get_rand_percent());
+        usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
+        //usnprintf(string, sizeof(string), "Main Duty: %4d%%", get_rand_percent());    // Test only
         OLEDStringDraw(string, 0, 0);
 
-        //usnprintf(string, sizeof(string), "Tail Duty: %4d%%", pwm_get_tail_duty());
-        usnprintf(string, sizeof(string), "Tail Duty: %4d%%", get_rand_percent());
+        usnprintf(string, sizeof(string), "Tail Duty: %4d%%", pwm_get_tail_duty());
+        //usnprintf(string, sizeof(string), "Tail Duty: %4d%%", get_rand_percent());    // Test only
         OLEDStringDraw(string, 0, 1);
 
         //usnprintf(string, sizeof(string), "      Yaw: %4d%c", yaw_get(), DISP_SYMBOL_DEGREES);
-        usnprintf(string, sizeof(string), "      Yaw: %4d%c", get_rand_yaw(), DISP_SYMBOL_DEGREES);
+        usnprintf(string, sizeof(string), "      Yaw: %4d%c", get_rand_yaw(), DISP_SYMBOL_DEGREES); // Test only
         OLEDStringDraw(string, 0, 2);
 
         //usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
-        usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
+        usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());   // Test only
         OLEDStringDraw(string, 0, 3);
 
         vTaskDelay(2000 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
         }
         // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
+}
+
+// UART sender task
+void uart_update(void *pvParameters)
+{
+    while (1) {
+            // originals commented out and modified copies for test
+            //uint16_t target_yaw = setpoint_get_yaw();
+            uint16_t target_yaw = get_rand_yaw();
+            //uint16_t actual_yaw = yaw_get();
+            uint16_t actual_yaw = get_rand_yaw();
+
+            //int16_t target_altitude = setpoint_get_altitude();
+            int16_t target_altitude = (int16_t) get_rand_percent();
+            int16_t actual_altitude = (int16_t) alt_get();
+            //uint8_t main_rotor_duty = pwm_get_main_duty();
+            uint8_t main_rotor_duty = (int8_t) get_rand_percent();
+            //uint8_t tail_rotor_duty = pwm_get_tail_duty();
+            uint8_t tail_rotor_duty = (int8_t) get_rand_percent();
+            //uint8_t operating_mode = flight_mode_get();
+            uint8_t operating_mode = IN_FLIGHT;
+
+// format the outgoing data
+//#if !CONFIG_DIRECT_CONTROL
+    usprintf(g_buffer, "Y%u\ty%u\tA%d\ta%d\tm%u\tt%u\to%u\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, main_rotor_duty, tail_rotor_duty, operating_mode);
+//#else
+//    usprintf(g_buffer, "y%u\ta%d\tm%u\tt%u\to%u\r\n", actual_yaw, actual_altitude, main_rotor_duty, tail_rotor_duty, operating_mode);
+//#endif
+
+    // send it
+    uart_send(g_buffer);
+    vTaskDelay(500 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
+    }
 }
 
 int main(void)
@@ -149,15 +202,11 @@ int main(void)
     GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_2, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD);
     GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0); // off by default
 
-
-   // utils_wait_for_seconds(5);
-
-
-    //Initialise ADC
-    alt_init();
-
-    // Initialise display
-    disp_init();
+    //Initialisation
+    alt_init();     // Altitude and ADC
+    disp_init();    // Display
+    //uart_init();    // UART
+    pwm_init();     // PWM
 
     // Enable interrupts to the processor.
     IntMasterEnable();
@@ -176,10 +225,15 @@ int main(void)
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 32, (void *)1, 4, NULL)) {
-                while(1);   // Oh no! Must not have had enough memory to create the task.
+    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 512, (void *)1, 4, NULL)) {
+        while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
+/*
+    if (pdTRUE != xTaskCreate(uart_update, "UART send", 2048, (void *)1, 4, NULL)) {
+        while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
+*/
     vTaskStartScheduler();  // Start FreeRTOS!!
 
     // Should never get here since the RTOS should never "exit".

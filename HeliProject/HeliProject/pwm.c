@@ -56,14 +56,16 @@
 static const int PWM_RATE = 200;
 
 /**
- * The PWM divider code for a 40 MHz system clock.
+ * The PWM divider code for a 80 MHz system clock.
+ * Was 8 for 40MHz clock
  */
-static const int PWM_DIVIDER_CODE = SYSCTL_PWMDIV_8;
+static const int PWM_DIVIDER_CODE = SYSCTL_PWMDIV_16;
 
 /**
- * The PWM divider for a 40 MHz system clock.
+ * The PWM divider for a 80 MHz system clock.
+ * Was 8 for 40MHz clock
  */
-static const int PWM_DIVIDER = 8;
+static const int PWM_DIVIDER = 16;
 
 // PWM Configuration for the main motor
 // PWM Hardware Details: M0PWM7 (gen 3), PC5, J4-05
@@ -182,26 +184,32 @@ void pwm_init(void)
     g_pwm_period = SysCtlClockGet() / (PWM_DIVIDER * PWM_RATE);
 
     SysCtlPWMClockSet(PWM_DIVIDER_CODE);
+    //while (!SysCtlPeripheralReady(PWM_DIVIDER_CODE)); // busy-wait until ready // Halts here if enabled
 
     // initialise the main rotor
     SysCtlPeripheralEnable(PWM_MAIN_PERIPH_PWM);
+    while (!SysCtlPeripheralReady(PWM_MAIN_PERIPH_PWM));
     SysCtlPeripheralEnable(PWM_MAIN_PERIPH_GPIO);
+    while (!SysCtlPeripheralReady(PWM_MAIN_PERIPH_GPIO));  // busy-wait until Main PWM and GPIO ready
     GPIOPinConfigure(PWM_MAIN_GPIO_CONFIG);
     GPIOPinTypePWM(PWM_MAIN_GPIO_BASE, PWM_MAIN_GPIO_PIN);
     PWMGenConfigure(PWM_MAIN_BASE, PWM_MAIN_GEN, PWM_GEN_MODE_UP_DOWN | PWM_GEN_MODE_NO_SYNC);
     PWMGenPeriodSet(PWM_MAIN_BASE, PWM_MAIN_GEN, g_pwm_period);
-    pwm_set_main_duty(0);
+    pwm_set_main_duty(0);                                   // Set Main rotor PWM to 0 (i.e. off)
     PWMGenEnable(PWM_MAIN_BASE, PWM_MAIN_GEN);
     PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, true);
 
     // initialise the tail rotor
     SysCtlPeripheralEnable(PWM_TAIL_PERIPH_PWM);
+    while (!SysCtlPeripheralReady(PWM_TAIL_PERIPH_PWM));
     SysCtlPeripheralEnable(PWM_TAIL_PERIPH_GPIO);
+    while (!SysCtlPeripheralReady(PWM_TAIL_PERIPH_GPIO));  // busy-wait until Tail PWM and GPIO ready
+
     GPIOPinConfigure(PWM_TAIL_GPIO_CONFIG);
     GPIOPinTypePWM(PWM_TAIL_GPIO_BASE, PWM_TAIL_GPIO_PIN);
     PWMGenConfigure(PWM_TAIL_BASE, PWM_TAIL_GEN, PWM_GEN_MODE_UP_DOWN | PWM_GEN_MODE_NO_SYNC);
     PWMGenPeriodSet(PWM_TAIL_BASE, PWM_TAIL_GEN, g_pwm_period);
-    pwm_set_tail_duty(0);
+    pwm_set_tail_duty(0);                                   // Set Tail rotor PWM to 0 (i.e. off)
     PWMGenEnable(PWM_TAIL_BASE, PWM_TAIL_GEN);
     PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, true);
 }
@@ -215,7 +223,8 @@ void pwm_set_main_duty(int8_t t_duty)
 
 int8_t pwm_get_main_duty(void)
 {
-    return g_main_duty;
+    //return g_main_duty;
+    return get_rand_percent();    // Test only
 }
 
 void pwm_set_tail_duty(int8_t t_duty)
@@ -227,5 +236,6 @@ void pwm_set_tail_duty(int8_t t_duty)
 
 int8_t pwm_get_tail_duty(void)
 {
-    return g_tail_duty;
+    //return g_tail_duty;
+    return get_rand_percent();    // Test only
 }

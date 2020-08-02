@@ -31,9 +31,9 @@
 #include "OrbitOLED/OrbitOLEDInterface.h"
 #include "utils/ustdlib.h"
 
-//#include "altitude.h" //commented out for test
+#include "altitude.h" //commented out for test
 #include "display.h"
-//#include "pwm.h"      //commented out for test
+#include "pwm.h"      //commented out for test
 #include "utils.h"
 //#include "yaw.h"      //commented out for test
 
@@ -98,20 +98,20 @@ void disp_all(void)
 {
     char string[17];
 
-    //usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
-    usnprintf(string, sizeof(string), "Main Duty: %4d%%", 60);
+    usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
+    //usnprintf(string, sizeof(string), "Main Duty: %4d%%", 60);    // Test only
     OLEDStringDraw(string, 0, 0);
 
-    //usnprintf(string, sizeof(string), "Tail Duty: %4d%%", pwm_get_tail_duty());
-    usnprintf(string, sizeof(string), "Tail Duty: %4d%%", 30);
+    usnprintf(string, sizeof(string), "Tail Duty: %4d%%", pwm_get_tail_duty());
+    //usnprintf(string, sizeof(string), "Tail Duty: %4d%%", 30);    // Test only
     OLEDStringDraw(string, 0, 1);
 
     //usnprintf(string, sizeof(string), "      Yaw: %4d%c", yaw_get(), DISP_SYMBOL_DEGREES);
-    usnprintf(string, sizeof(string), "      Yaw: %4d%c", 170, DISP_SYMBOL_DEGREES);
+    usnprintf(string, sizeof(string), "      Yaw: %4d%c", 170, DISP_SYMBOL_DEGREES);    // Test only
     OLEDStringDraw(string, 0, 2);
 
-    //usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
-    usnprintf(string, sizeof(string), " Altitude: %4d%%", 30);
+    usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
+    //usnprintf(string, sizeof(string), " Altitude: %4d%%", 30);    // Test only
     OLEDStringDraw(string, 0, 3);
 }
 
