@@ -42,6 +42,7 @@ int yawDeg = 0;
 void initQuadDecode(void)
 {
     SysCtlPeripheralEnable(PHASE_AB_PERIPH);
+    while (!SysCtlPeripheralReady(PHASE_AB_PERIPH));
     GPIOPinTypeQEI(PHASE_AB_PORT_BASE, PHASE_A_PIN | PHASE_B_PIN);      // Sets pin types to be Quad Decoding pins (Just makes Phase B HIGH = 2 instead of 1)
 
     GPIOIntRegister(PHASE_AB_PORT_BASE, QDIntHandler);                  // Sets QDIntHandler to be function to handle interrupt

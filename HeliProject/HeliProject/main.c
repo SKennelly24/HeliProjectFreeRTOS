@@ -50,7 +50,7 @@
 
 #include "setpoint.h"
 #include "flight_mode.h"
-#include "yaw.h"
+
 */
 
 // RTOS
@@ -87,7 +87,7 @@ void BlinkRedLED(void *pvParameters)
         GPIOPinWrite(GPIO_PORTF_BASE, whichBit, currentValue);
         vTaskDelay(1000 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
     }
-    // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
+    // No way to kill this task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
 
@@ -100,7 +100,7 @@ void GetAltitude(void *pvParameters)
         int32_t height = alt_update();
         vTaskDelay(100 / portTICK_RATE_MS);  //  Current frequency is
     }
-    // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
+    // No way to kill this task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
 void GetYaw(void *pvParameters)
