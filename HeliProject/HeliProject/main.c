@@ -141,12 +141,11 @@ void disp_Values(void *pvParameters)
 // UART sender task
 void uart_update(void *pvParameters)
 {
-
+    //static const int UART_INPUT_BUFFER_SIZE = 40;
     /**
      * Buffer settings for UART
      */
-    //static const int UART_INPUT_BUFFER_SIZE = 40;
-    char g_buffer[40] = {0};
+    char g_buffer[40] = {0};        //fixed the buffer size to 40
 
     while (1) {
             // originals commented out and modified copies for test
@@ -218,18 +217,21 @@ int main(void)
     disp_advance_state();
 
     // Initialise tasks
+    /*
+     * Bye bye blinky, we have other tasks working, you are not needed anymore.
+     * Blame PWM it trashed you.
+     *
     if (pdTRUE != xTaskCreate(BlinkRedLED, "Blink Red", 32, (void *)1, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
-
-    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 512, NULL, 4, NULL)) {
+    */
+    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 128, NULL, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
     if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 512, NULL, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
-
 
     if (pdTRUE != xTaskCreate(uart_update, "UART send", 512, NULL, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
