@@ -112,7 +112,12 @@ void GetAltitude(void *pvParameters)
     // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
+void GetYaw(void *pvParameters)
+{
 
+
+
+}
 
 int main(void)
 {
@@ -164,6 +169,12 @@ int main(void)
         }
 /*
     if (pdTRUE != xTaskCreate(disp_Update, "Display Update", 32, (void *)1, 4, NULL)) {
+                while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
+*/
+
+/*
+    if (pdTRUE != xTaskCreate(GetYaw, "Get Yaw", 32, (void *)1, 4, NULL)) {
                 while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 */

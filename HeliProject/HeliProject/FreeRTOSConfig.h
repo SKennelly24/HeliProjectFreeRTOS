@@ -51,5 +51,9 @@
 
 #define configTICK_RATE_HZ 1000 // 1ms SysTick ticker
 
+#define configUSE_MUTEXES 1
+
+#define configUSE_COUNTING_SEMAPHORES 1
+
 
 #endif /* FREERTOSCONFIG_H_ */
