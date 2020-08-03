@@ -49,6 +49,12 @@ void disp_init(void);
 void disp_advance_state(void);
 
 /**
+ * Displays the splash screen
+ * (Originally used to display something while calibrating height.)
+ */
+void disp_calibration(void);
+
+/**
  * Clears the display if g_displayState differs from the previous time disp_render() was called
  * Then renders to the display based on the value of g_displayState
  */

@@ -55,4 +55,9 @@ void uart_send(const char *t_buffer);
  */
 //void uart_kernel_data_update(KernelTask* t_task);
 
+/**
+ * Transmits the helicopter status information via UART.
+ */
+void uart_update(void *pvParameters);
+
 #endif /* UART_H_ */
