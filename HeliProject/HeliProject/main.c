@@ -37,7 +37,7 @@
 #include "altitude.h"
 #include "uart.h"
 #include "pwm.h"
-#include "yaw.c"
+#include "yaw.h"
 
 /*
 #
@@ -175,7 +175,7 @@ int main(void)
     }
 
     if (pdTRUE != xTaskCreate(GetYaw, "Get Yaw", 128, NULL, 4, NULL)) {
-                while(1);   // Oh no! Must not have had enough memory to create the task.
+        while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
     vTaskStartScheduler();  // Start FreeRTOS!!
