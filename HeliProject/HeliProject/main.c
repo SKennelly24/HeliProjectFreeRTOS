@@ -111,11 +111,13 @@ void GetAltitude(void *pvParameters)
     // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
+/*
 // OLED Display Updater task
 void disp_Values(void *pvParameters)
 {
+    char string[17] = {0};
+
     while (1) {
-        char string[17];
 
         usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
         //usnprintf(string, sizeof(string), "Main Duty: %4d%%", get_rand_percent());    // Test only
@@ -137,6 +139,7 @@ void disp_Values(void *pvParameters)
         }
         // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
+*/
 
 // UART sender task
 void uart_update(void *pvParameters)
@@ -212,7 +215,7 @@ int main(void)
     IntMasterEnable();
 
     // Render splash screen for a couple of seconds
-    disp_render(NULL);
+    disp_calibration();
     utils_wait_for_seconds(SPLASH_SCREEN_WAIT_TIME);
     disp_advance_state();
 
