@@ -104,6 +104,8 @@ void GetAltitude(void *pvParameters)
 }
 
 
+}
+
 int main(void)
 {
     // disable all interrupts
@@ -164,6 +166,12 @@ int main(void)
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
+
+/*
+    if (pdTRUE != xTaskCreate(GetYaw, "Get Yaw", 32, (void *)1, 4, NULL)) {
+                while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
+*/
 
     vTaskStartScheduler();  // Start FreeRTOS!!
 
