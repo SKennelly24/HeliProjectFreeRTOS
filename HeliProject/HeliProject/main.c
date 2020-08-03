@@ -64,33 +64,6 @@
 static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
 
 
-
-// Blinky Red function
-void BlinkRedLED(void *pvParameters)
-{
-    unsigned int whichLed = (unsigned int)pvParameters; /* While pvParameters is technically a pointer, a pointer is nothing
-                                                         * more than an unsigned integer of size equal to the architecture's
-                                                         * memory address bus width, which is 32-bits in ARM.  We're abusing
-                                                         * the parameter then to hold a simple integer value.  Could also have
-                                                         * used this as a pointer to a memory location holding the value, but
-                                                         * our method uses less memory.
-                                                         */
-
-
-    const uint8_t whichBit = 1 << whichLed; // TivaWare GPIO calls require the pin# as a binary bitmask, not a simple number.
-    // Alternately, we could have passed the bitmask into pvParameters instead of a simple number.
-
-    uint8_t currentValue = 0;
-
-    while (1) {
-        currentValue ^= whichBit; // XOR keeps flipping the bit on / off alternately each time this runs.
-        GPIOPinWrite(GPIO_PORTF_BASE, whichBit, currentValue);
-        vTaskDelay(1000 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
-    }
-    // No way to kill this task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
-}
-
-
 // Altitude task
 void GetAltitude(void *pvParameters)
 {
@@ -103,6 +76,7 @@ void GetAltitude(void *pvParameters)
     // No way to kill this task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
+// Yaw task
 void GetYaw(void *pvParameters)
 {
     while (1) {
@@ -120,9 +94,7 @@ int main(void)
 
     // Set the clock rate to 80 MHz
     SysCtlClockSet (SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
-
                     SYSCTL_XTAL_16MHZ);
-
 
     // For LED blinky task - initialize GPIO port F and then pin #1 (red) for output
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF); // activate internal bus clocking for GPIO port F
@@ -154,14 +126,6 @@ int main(void)
     disp_advance_state();
 
     // Initialise tasks
-    /*
-     * Bye bye blinky, we have other tasks working, you are not needed anymore.
-     * Blame PWM it trashed you.
-     *
-    if (pdTRUE != xTaskCreate(BlinkRedLED, "Blink Red", 32, (void *)1, 4, NULL)) {
-        while(1);   // Oh no! Must not have had enough memory to create the task.
-    }
-    */
     if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 128, NULL, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }

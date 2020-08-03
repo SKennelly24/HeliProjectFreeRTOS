@@ -82,4 +82,10 @@ int get_rand_percent();
  */
 int get_rand_yaw();
 
+/**
+ * Returns a valid flight mode (uses random int between 0 and 2)
+ * For testing.
+ */
+int get_rand_FlightMode();
+
 #endif /* UTILS_H_ */
