@@ -19,7 +19,7 @@
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROJECT.TargetConfigHeli.ccxml.Stellaris In-Circuit Debug Interface_0/CORTEX_M4_0" value="HeliProject"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROJECT.Tiva TM4C123GH6PM.ccxml.Stellaris In-Circuit Debug Interface/CORTEX_M4_0" value="HeliProject"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_TARGET_CONFIG" value="${target_config_active_default:HeliProject}"/>
-<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.TargetConfigHeli.ccxml.Stellaris In-Circuit Debug Interface_0/CORTEX_M4_0" value="P:/My Documents\ENCE464\group18\HeliProject\HeliProject\Debug\HeliProject.out"/>
+<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.TargetConfigHeli.ccxml.Stellaris In-Circuit Debug Interface_0/CORTEX_M4_0" value="P:/My Documents\Third Pro\ENCE464\group18\HeliProject\HeliProject\Debug\HeliProject.out"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.Tiva TM4C123GH6PM.ccxml.Stellaris In-Circuit Debug Interface/CORTEX_M4_0" value="P:/My Documents\ENCE464\group18\HeliProject\HeliProject\Debug\HeliProject.out"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/HeliProject"/>

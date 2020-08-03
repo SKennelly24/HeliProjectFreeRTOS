@@ -50,7 +50,7 @@
 #include "pwm.h"
 //#include "setpoint.h"
 #include "uart.h"
-//#include "yaw.h"
+#include "yaw.h"
 #include "utils.h"
 
 /**
@@ -153,7 +153,7 @@ void uart_update(void *pvParameters)
             //uint16_t target_yaw = setpoint_get_yaw();
             uint16_t target_yaw = get_rand_yaw();
             //uint16_t actual_yaw = yaw_get();
-            uint16_t actual_yaw = get_rand_yaw();
+            uint16_t actual_yaw = yawInDegrees();
 
             //int16_t target_altitude = setpoint_get_altitude();
             int16_t target_altitude = (int16_t) get_rand_percent();
