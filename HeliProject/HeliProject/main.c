@@ -52,7 +52,6 @@
 #include "yaw.h"
 */
 
-
 // RTOS
 #include "FreeRTOS.h"
 #include "task.h"
@@ -103,8 +102,6 @@ void GetAltitude(void *pvParameters)
     // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
-
-}
 
 int main(void)
 {
