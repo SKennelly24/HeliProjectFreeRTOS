@@ -95,14 +95,6 @@ initButtons (void)
     }
 }
 
-
-/*void initButtonQueue(void)
-{
-    mutex = Semaphore(1);
-    buttonPushQueue = Semaphore(0);
-
-}*/
-
 // *******************************************************
 // updateButtons: Function designed to be called regularly. It polls all
 // buttons once and updates variables associated with the buttons if
