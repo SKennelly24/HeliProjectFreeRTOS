@@ -37,6 +37,7 @@
 #include "altitude.h"
 #include "uart.h"
 #include "pwm.h"
+#include "yaw.c"
 
 /*
 #
@@ -102,6 +103,15 @@ void GetAltitude(void *pvParameters)
     // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
+void GetYaw(void *pvParameters)
+{
+    while (1) {
+        QDIntHandler();
+        int32_t yaw = yawInDegrees();
+        vTaskDelay(100 / portTICK_RATE_MS);
+    }
+}
+
 
 int main(void)
 {
@@ -133,6 +143,7 @@ int main(void)
     disp_init();    // Display
     uart_init();    // UART
     pwm_init();     // PWM (overwrites LED)
+    initQuadDecode(); //Yaw
 
     // Enable interrupts to the processor.
     IntMasterEnable();
@@ -163,12 +174,9 @@ int main(void)
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-
-/*
-    if (pdTRUE != xTaskCreate(GetYaw, "Get Yaw", 32, (void *)1, 4, NULL)) {
+    if (pdTRUE != xTaskCreate(GetYaw, "Get Yaw", 128, NULL, 4, NULL)) {
                 while(1);   // Oh no! Must not have had enough memory to create the task.
     }
-*/
 
     vTaskStartScheduler();  // Start FreeRTOS!!
 
