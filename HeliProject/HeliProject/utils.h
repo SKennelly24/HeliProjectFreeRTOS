@@ -1,6 +1,7 @@
 /*******************************************************************************
  * 
  * utils.h
+ *
  * Modified for ENCE464-20S2 Group 18
  * 2020_07_28 by:
  *  - Derrick Edward
@@ -68,5 +69,17 @@ void utils_wait_for_seconds(uint32_t t_delay);
  * results came in.
  */
 #define WE_STILL_HAVENT_GOTTEN_OUR_MIDTERM_TEST_RESULTS_BACK false
+
+/**
+ * Returns a (semi) random int between 0 and 100.
+ * For testing.
+ */
+int get_rand_percent();
+
+/**
+ * Returns a (semi) random int between 0 and 360.
+ * For testing.
+ */
+int get_rand_yaw();
 
 #endif /* UTILS_H_ */

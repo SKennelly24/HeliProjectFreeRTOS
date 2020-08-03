@@ -27,6 +27,11 @@
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
 
+/**
+ * Bytecode for rendering degree symbol on the display
+ */
+static const int DISP_SYMBOL_DEGREES = 0x60;
+
 #include <stdint.h>
 //#include "kernel.h" // kernel not needed using RTOS
 
@@ -47,6 +52,11 @@ void disp_advance_state(void);
  * Clears the display if g_displayState differs from the previous time disp_render() was called
  * Then renders to the display based on the value of g_displayState
  */
-void disp_render(void *pvParameters);
+//void disp_render(void *pvParameters);
+
+/**
+ * New OLED display task
+ */
+void disp_Values(void *pvParameters);
 
 #endif

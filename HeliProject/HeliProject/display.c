@@ -31,9 +31,14 @@
 #include "OrbitOLED/OrbitOLEDInterface.h"
 #include "utils/ustdlib.h"
 
-//#include "altitude.h" //commented out for test
+// RTOS
+#include "FreeRTOS.h"
+#include "task.h"
+
+// Heli Project
+#include "altitude.h" //commented out for test
 #include "display.h"
-//#include "pwm.h"      //commented out for test
+#include "pwm.h"      //commented out for test
 #include "utils.h"
 //#include "yaw.h"      //commented out for test
 
@@ -41,7 +46,7 @@
 /**
  * Bytecode for rendering degree symbol on the display
  */
-static const int DISP_SYMBOL_DEGREES = 0x60;
+//static const int DISP_SYMBOL_DEGREES = 0x60;
 
 /**
  * Enum of all states the display can be in. Cycled by pressing BTN2
@@ -93,27 +98,35 @@ void disp_advance_state(void)
 
 /**
  * Display yaw and altitude percentage at the same time
+ * Was disp_all()
  */
-void disp_all(void)
+void disp_Values(void *pvParameters)
 {
-    char string[17];
+    char string[17] = {0};
 
-    //usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
-    usnprintf(string, sizeof(string), "Main Duty: %4d%%", 60);
-    OLEDStringDraw(string, 0, 0);
+    while (1) {
 
-    //usnprintf(string, sizeof(string), "Tail Duty: %4d%%", pwm_get_tail_duty());
-    usnprintf(string, sizeof(string), "Tail Duty: %4d%%", 30);
-    OLEDStringDraw(string, 0, 1);
+        usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
+        //usnprintf(string, sizeof(string), "Main Duty: %4d%%", get_rand_percent());    // Test only
+        OLEDStringDraw(string, 0, 0);
 
-    //usnprintf(string, sizeof(string), "      Yaw: %4d%c", yaw_get(), DISP_SYMBOL_DEGREES);
-    usnprintf(string, sizeof(string), "      Yaw: %4d%c", 170, DISP_SYMBOL_DEGREES);
-    OLEDStringDraw(string, 0, 2);
+        usnprintf(string, sizeof(string), "Tail Duty: %4d%%", pwm_get_tail_duty());
+        //usnprintf(string, sizeof(string), "Tail Duty: %4d%%", get_rand_percent());    // Test only
+        OLEDStringDraw(string, 0, 1);
 
-    //usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
-    usnprintf(string, sizeof(string), " Altitude: %4d%%", 30);
-    OLEDStringDraw(string, 0, 3);
+        //usnprintf(string, sizeof(string), "      Yaw: %4d%c", yaw_get(), DISP_SYMBOL_DEGREES);
+        usnprintf(string, sizeof(string), "      Yaw: %4d%c", get_rand_yaw(), DISP_SYMBOL_DEGREES); // Test only
+        OLEDStringDraw(string, 0, 2);
+
+        //usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
+        usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());   // Test only
+        OLEDStringDraw(string, 0, 3);
+
+        vTaskDelay(2000 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
+        }
+        // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
+
 
 /**
  * Unknown display state fail-safe
@@ -124,6 +137,7 @@ void disp_unknown(void)
     OLEDStringDraw("state!", 0, 3);
 }
 
+/*
 void disp_render(void *pvParameters)
 {
     switch (g_displayState)
@@ -132,13 +146,14 @@ void disp_render(void *pvParameters)
         disp_calibration();
         break;
     case DISP_STATE_ALL:
-        disp_all();
+        disp_Values();
         break;
     default:
         disp_unknown();
         break;
     }
 }
+*/
 
 void disp_init(void)
 {
