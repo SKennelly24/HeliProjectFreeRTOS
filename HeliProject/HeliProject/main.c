@@ -64,12 +64,6 @@
 static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
 
 /**
- * Buffer settings for UART
- */
-static const int UART_INPUT_BUFFER_SIZE = 40;
-static char *g_buffer;
-
-/**
  * Enum for status of flight_mode
  * Finite State Machine
  */
@@ -105,7 +99,7 @@ void BlinkRedLED(void *pvParameters)
 }
 
 
-// Blinky Red function
+// Altitude task
 void GetAltitude(void *pvParameters)
 {
 
@@ -147,6 +141,13 @@ void disp_Values(void *pvParameters)
 // UART sender task
 void uart_update(void *pvParameters)
 {
+
+    /**
+     * Buffer settings for UART
+     */
+    //static const int UART_INPUT_BUFFER_SIZE = 40;
+    char g_buffer[40] = {0};
+
     while (1) {
             // originals commented out and modified copies for test
             //uint16_t target_yaw = setpoint_get_yaw();
@@ -205,8 +206,8 @@ int main(void)
     //Initialisation
     alt_init();     // Altitude and ADC
     disp_init();    // Display
-    //uart_init();    // UART
-    pwm_init();     // PWM
+    uart_init();    // UART
+    pwm_init();     // PWM (overwrites LED)
 
     // Enable interrupts to the processor.
     IntMasterEnable();
@@ -221,19 +222,20 @@ int main(void)
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 1024, (void *)1, 4, NULL)) {
+    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 512, NULL, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 512, (void *)1, 4, NULL)) {
+    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 512, NULL, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-/*
-    if (pdTRUE != xTaskCreate(uart_update, "UART send", 2048, (void *)1, 4, NULL)) {
+
+    if (pdTRUE != xTaskCreate(uart_update, "UART send", 512, NULL, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
-*/
+
+
     vTaskStartScheduler();  // Start FreeRTOS!!
 
     // Should never get here since the RTOS should never "exit".
