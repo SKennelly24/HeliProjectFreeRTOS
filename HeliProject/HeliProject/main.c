@@ -52,7 +52,6 @@
 #include "yaw.h"
 */
 
-
 // RTOS
 #include "FreeRTOS.h"
 #include "task.h"
@@ -63,15 +62,7 @@
  */
 static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
 
-/**
- * Enum for status of flight_mode
- * Finite State Machine
- */
-enum flight_mode_state_e { LANDED,
-                                  TAKE_OFF,
-                                  IN_FLIGHT,
-                                  LANDING };
-typedef enum flight_mode_state_e FlightModeState;
+
 
 // Blinky Red function
 void BlinkRedLED(void *pvParameters)
@@ -111,76 +102,6 @@ void GetAltitude(void *pvParameters)
     // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
-/*
-// OLED Display Updater task
-void disp_Values(void *pvParameters)
-{
-    char string[17] = {0};
-
-    while (1) {
-
-        usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
-        //usnprintf(string, sizeof(string), "Main Duty: %4d%%", get_rand_percent());    // Test only
-        OLEDStringDraw(string, 0, 0);
-
-        usnprintf(string, sizeof(string), "Tail Duty: %4d%%", pwm_get_tail_duty());
-        //usnprintf(string, sizeof(string), "Tail Duty: %4d%%", get_rand_percent());    // Test only
-        OLEDStringDraw(string, 0, 1);
-
-        //usnprintf(string, sizeof(string), "      Yaw: %4d%c", yaw_get(), DISP_SYMBOL_DEGREES);
-        usnprintf(string, sizeof(string), "      Yaw: %4d%c", get_rand_yaw(), DISP_SYMBOL_DEGREES); // Test only
-        OLEDStringDraw(string, 0, 2);
-
-        //usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
-        usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());   // Test only
-        OLEDStringDraw(string, 0, 3);
-
-        vTaskDelay(2000 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
-        }
-        // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
-}
-*/
-
-// UART sender task
-void uart_update(void *pvParameters)
-{
-    //static const int UART_INPUT_BUFFER_SIZE = 40;
-    /**
-     * Buffer settings for UART
-     */
-    char g_buffer[40] = {0};        //fixed the buffer size to 40
-
-    while (1) {
-            // originals commented out and modified copies for test
-            //uint16_t target_yaw = setpoint_get_yaw();
-            uint16_t target_yaw = get_rand_yaw();
-            //uint16_t actual_yaw = yaw_get();
-            uint16_t actual_yaw = get_rand_yaw();
-
-            //int16_t target_altitude = setpoint_get_altitude();
-            int16_t target_altitude = (int16_t) get_rand_percent();
-            int16_t actual_altitude = (int16_t) alt_get();
-            //uint8_t main_rotor_duty = pwm_get_main_duty();
-            uint8_t main_rotor_duty = (int8_t) get_rand_percent();
-            //uint8_t tail_rotor_duty = pwm_get_tail_duty();
-            uint8_t tail_rotor_duty = (int8_t) get_rand_percent();
-            //uint8_t operating_mode = flight_mode_get();
-            uint8_t operating_mode = IN_FLIGHT;
-
-// format the outgoing data
-//#if !CONFIG_DIRECT_CONTROL
-    usprintf(g_buffer, "Y%u\ty%u\tA%d\ta%d\tm%u\tt%u\to%u\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, main_rotor_duty, tail_rotor_duty, operating_mode);
-//#else
-//    usprintf(g_buffer, "y%u\ta%d\tm%u\tt%u\to%u\r\n", actual_yaw, actual_altitude, main_rotor_duty, tail_rotor_duty, operating_mode);
-//#endif
-
-    // send it
-    uart_send(g_buffer);
-    vTaskDelay(500 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
-    }
-}
-
-}
 
 int main(void)
 {
