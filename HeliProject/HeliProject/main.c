@@ -64,12 +64,6 @@
 static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
 
 /**
- * Buffer settings for UART
- */
-static const int UART_INPUT_BUFFER_SIZE = 40;
-static char *g_buffer;
-
-/**
  * Enum for status of flight_mode
  * Finite State Machine
  */
@@ -105,7 +99,7 @@ void BlinkRedLED(void *pvParameters)
 }
 
 
-// Blinky Red function
+// Altitude task
 void GetAltitude(void *pvParameters)
 {
 
@@ -117,11 +111,13 @@ void GetAltitude(void *pvParameters)
     // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
+/*
 // OLED Display Updater task
 void disp_Values(void *pvParameters)
 {
+    char string[17] = {0};
+
     while (1) {
-        char string[17];
 
         usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
         //usnprintf(string, sizeof(string), "Main Duty: %4d%%", get_rand_percent());    // Test only
@@ -143,10 +139,17 @@ void disp_Values(void *pvParameters)
         }
         // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
+*/
 
 // UART sender task
 void uart_update(void *pvParameters)
 {
+    //static const int UART_INPUT_BUFFER_SIZE = 40;
+    /**
+     * Buffer settings for UART
+     */
+    char g_buffer[40] = {0};        //fixed the buffer size to 40
+
     while (1) {
             // originals commented out and modified copies for test
             //uint16_t target_yaw = setpoint_get_yaw();
@@ -177,6 +180,8 @@ void uart_update(void *pvParameters)
     }
 }
 
+}
+
 int main(void)
 {
     // disable all interrupts
@@ -205,35 +210,45 @@ int main(void)
     //Initialisation
     alt_init();     // Altitude and ADC
     disp_init();    // Display
-    //uart_init();    // UART
-    pwm_init();     // PWM
+    uart_init();    // UART
+    pwm_init();     // PWM (overwrites LED)
 
     // Enable interrupts to the processor.
     IntMasterEnable();
 
     // Render splash screen for a couple of seconds
-    disp_render(NULL);
+    disp_calibration();
     utils_wait_for_seconds(SPLASH_SCREEN_WAIT_TIME);
     disp_advance_state();
 
     // Initialise tasks
+    /*
+     * Bye bye blinky, we have other tasks working, you are not needed anymore.
+     * Blame PWM it trashed you.
+     *
     if (pdTRUE != xTaskCreate(BlinkRedLED, "Blink Red", 32, (void *)1, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
-
-    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 1024, (void *)1, 4, NULL)) {
+    */
+    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 128, NULL, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 512, (void *)1, 4, NULL)) {
+    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 512, NULL, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
+
+    if (pdTRUE != xTaskCreate(uart_update, "UART send", 512, NULL, 4, NULL)) {
+        while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
 
 /*
-    if (pdTRUE != xTaskCreate(uart_update, "UART send", 2048, (void *)1, 4, NULL)) {
-        while(1);   // Oh no! Must not have had enough memory to create the task.
+    if (pdTRUE != xTaskCreate(GetYaw, "Get Yaw", 32, (void *)1, 4, NULL)) {
+                while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 */
+
     vTaskStartScheduler();  // Start FreeRTOS!!
 
     // Should never get here since the RTOS should never "exit".
