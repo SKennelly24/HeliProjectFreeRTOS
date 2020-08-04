@@ -68,15 +68,15 @@
  */
 static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
 
-QueueHandle_t g_button_queue;
-SemaphoreHandle_t g_button_mutex;
-int8_t g_last_press = -1;
+static QueueHandle_t g_button_queue;
+static SemaphoreHandle_t g_button_mutex;
+static int32_t g_altitudeReference;
+static int32_t g_yawReference;
 
 
 // Altitude task
 void GetAltitude(void *pvParameters)
 {
-
     while (1) {
         alt_process_adc();
         int32_t height = alt_update();
@@ -130,6 +130,42 @@ void QueueButtonPushes(void *pvParameters)
     }
 }
 
+void UpdateReferences(int8_t pressed_button)
+{
+    switch(pressed_button) {
+        case UP:
+            if (g_altitudeReference < (MAX_HEIGHT - 10)) { //If not within 10% of max altitude
+                g_altitudeReference = g_altitudeReference + 10;
+            } else {
+                g_altitudeReference = MAX_HEIGHT;
+            }
+            break;
+        case DOWN:
+            // Checks lower limits of altitude if down button is pressed
+            if (g_altitudeReference > 10) {
+               g_altitudeReference = g_altitudeReference - 10;
+            } else {
+               g_altitudeReference = 0;
+            }
+            break;
+        case RIGHT:
+            if (g_yawReference <= 164) {
+               g_yawReference = g_yawReference + 15;
+            } else {
+               g_yawReference = -345 + g_yawReference;
+            }
+            break;
+        case LEFT:
+            if (g_yawReference >= -165) {
+                g_yawReference = g_yawReference - 15;
+            } else {
+                g_yawReference = 345 + g_yawReference;
+            }
+            break;
+    }
+
+}
+
 void CheckButtonQueue(void *pvParameters)
 {
     int8_t pressed_button = -1;
@@ -140,7 +176,7 @@ void CheckButtonQueue(void *pvParameters)
             if ((uxQueueMessagesWaiting(g_button_queue)) > 0) //Not sure if you need the token for this
             {
                 xQueueReceive(g_button_queue, &pressed_button, (TickType_t) 0);
-                //printf("Pressed %d button", pressed_button);
+                UpdateReferences(pressed_button);
 
             }
             xSemaphoreGive(g_button_mutex);

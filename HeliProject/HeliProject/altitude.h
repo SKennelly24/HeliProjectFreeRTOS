@@ -28,6 +28,8 @@
 #ifndef ALTITUDE_H_
 #define ALTITUDE_H_
 
+#define MAX_HEIGHT 100
+
 #include <stdint.h>
 #include <stdbool.h>
 
