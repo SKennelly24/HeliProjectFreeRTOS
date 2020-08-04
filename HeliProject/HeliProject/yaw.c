@@ -9,7 +9,9 @@
  *  - Manu Hamblyn
  *
  *  This code does not make sense, you do not register or deal with the reference yaw
- *  what so ever, you also initialise the interrupts in an unusal way
+ *  what so ever, you also initialise the interrupts in an unusual way and dealing,
+ *  with the reference in the main function will not work - last year you polled this
+ *  which will not work this year, entire file needs to be redone
  *
 * ****************************************************************
  * QUAD_DECODE.c
