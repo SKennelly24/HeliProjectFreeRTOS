@@ -38,6 +38,7 @@
 #include "uart.h"
 #include "pwm.h"
 #include "yaw.h"
+#include "buttons.h"
 
 /*
 #
@@ -56,12 +57,20 @@
 // RTOS
 #include "FreeRTOS.h"
 #include "task.h"
+#include "FreeRTOS/include/queue.h"
+#include "FreeRTOS/include/semphr.h"
+
+#define QUEUE_SIZE 16
 
 // Global constants .. bad but needed
 /**
  * The amount of time to display the splash screen (in seconds)
  */
 static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
+
+QueueHandle_t g_button_queue;
+SemaphoreHandle_t g_button_mutex;
+int8_t g_last_press = -1;
 
 
 // Altitude task
@@ -82,6 +91,60 @@ void GetYaw(void *pvParameters)
     while (1) {
         QDIntHandler();
         int32_t yaw = yawInDegrees();
+        vTaskDelay(100 / portTICK_RATE_MS);
+    }
+}
+
+void initButtonQueue(void)
+{
+    g_button_queue = xQueueCreate(QUEUE_SIZE, sizeof(uint8_t));
+    g_button_mutex = xSemaphoreCreateMutex();
+
+}
+
+void CheckQueueButton(uint8_t button)
+{
+    //printf("Checking button %d", button);
+    uint8_t buttonState;
+    buttonState = checkButton(button);
+    if (buttonState == PUSHED)
+    {
+
+        if (xSemaphoreTake(g_button_mutex, (TickType_t) 10) == true)
+        {
+            xQueueSendToBack(g_button_queue, (void *) &button, (TickType_t) 0);
+            printf("Pushed and Queued %d", button);
+            xSemaphoreGive(g_button_mutex);
+        }
+    }
+}
+void QueueButtonPushes(void *pvParameters)
+{
+    while(1){
+        updateButtons();
+        CheckQueueButton(UP);
+        CheckQueueButton(DOWN);
+        CheckQueueButton(LEFT);
+        CheckQueueButton(RIGHT);
+        vTaskDelay(20 / portTICK_RATE_MS);  //  Current frequency is 50Hz
+    }
+}
+
+void CheckButtonQueue(void *pvParameters)
+{
+    int8_t pressed_button = -1;
+    while(1) {
+        //printf("Checking Button Queue");
+        if (xSemaphoreTake(g_button_mutex, (TickType_t) 10) == true)
+        {
+            if ((uxQueueMessagesWaiting(g_button_queue)) > 0) //Not sure if you need the token for this
+            {
+                xQueueReceive(g_button_queue, &pressed_button, (TickType_t) 0);
+                //printf("Pressed %d button", pressed_button);
+
+            }
+            xSemaphoreGive(g_button_mutex);
+        }
         vTaskDelay(100 / portTICK_RATE_MS);
     }
 }
@@ -116,6 +179,8 @@ int main(void)
     uart_init();    // UART
     pwm_init();     // PWM (overwrites LED)
     initQuadDecode(); //Yaw
+    initButtonQueue();
+    initButtons();
 
     // Enable interrupts to the processor.
     IntMasterEnable();
@@ -139,6 +204,14 @@ int main(void)
     }
 
     if (pdTRUE != xTaskCreate(GetYaw, "Get Yaw", 128, NULL, 4, NULL)) {
+        while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
+    if (pdTRUE != xTaskCreate(QueueButtonPushes, "Queue Button Pushes", 32, NULL, 4, NULL)) {
+        while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
+    if (pdTRUE != xTaskCreate(CheckButtonQueue, "Check Button Queue", 32, NULL, 4, NULL)) {
         while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 

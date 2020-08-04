@@ -42,7 +42,6 @@
 #include "utils.h"
 #include "yaw.h"      //commented out for test
 
-
 /**
  * Bytecode for rendering degree symbol on the display
  */

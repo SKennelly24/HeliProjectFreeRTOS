@@ -66,6 +66,6 @@ void flight_mode_advance_state(void);
  * KERNEL TASK.
  * Called by the kernel. Checks conditions and advances state.
  */
-void flight_mode_update(KernelTask* t_task);
+//void flight_mode_update(KernelTask* t_task);
 
 #endif /* OPSTATUSFSM_H_ */

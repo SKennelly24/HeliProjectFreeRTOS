@@ -27,16 +27,15 @@
  * of the helicopter under control of a Finite Sate Machine
  *
  *********************************************************************************/
-
 #include <stdint.h>
 #include <stdbool.h>
 
 #include "altitude.h"
-#include "config.h"
-#include "control.h"
+//#include "config.h"
+//#include "control.h"
 #include "flight_mode.h"
 #include "pwm.h"
-#include "setpoint.h"
+//#include "setpoint.h"
 #include "utils.h"
 #include "yaw.h"
 
@@ -89,7 +88,7 @@ void flight_mode_advance_state(void)
     }
 }
 
-void flight_mode_update(KernelTask* t_task)
+/*void flight_mode_update(KernelTask* t_task)
 {
     // If state is TAKE_OFF, find yaw reference, advance state,
     //  then enable PID controls
@@ -178,4 +177,4 @@ void flight_mode_update(KernelTask* t_task)
             setpoint_set_yaw(0);
         }
     }
-}
+}*/
