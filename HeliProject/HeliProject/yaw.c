@@ -8,6 +8,9 @@
  *  - Sarah Kennelley
  *  - Manu Hamblyn
  *
+ *  This code does not make sense, you do not register or deal with the reference yaw
+ *  what so ever, you also initialise the interrupts in an unusal way
+ *
 * ****************************************************************
  * QUAD_DECODE.c
  *
@@ -43,13 +46,17 @@ void initQuadDecode(void)
 {
     SysCtlPeripheralEnable(PHASE_AB_PERIPH);
     while (!SysCtlPeripheralReady(PHASE_AB_PERIPH));
+
     GPIOPinTypeQEI(PHASE_AB_PORT_BASE, PHASE_A_PIN | PHASE_B_PIN);      // Sets pin types to be Quad Decoding pins (Just makes Phase B HIGH = 2 instead of 1)
 
     GPIOIntRegister(PHASE_AB_PORT_BASE, QDIntHandler);                  // Sets QDIntHandler to be function to handle interrupt
+
     GPIOIntTypeSet(PHASE_AB_PORT_BASE, PHASE_A_INT_PIN,                 // Sets Phase A interrupt on both rising and falling edges
                    GPIO_BOTH_EDGES);
     GPIOIntTypeSet(PHASE_AB_PORT_BASE, PHASE_B_INT_PIN,                 // Sets Phase B interrupt on both rising and falling edges
                    GPIO_BOTH_EDGES);
+
+
     GPIOIntEnable(PHASE_AB_PORT_BASE, PHASE_A_INT_PIN                   // Enables interrupts
                   | PHASE_B_INT_PIN);
 }

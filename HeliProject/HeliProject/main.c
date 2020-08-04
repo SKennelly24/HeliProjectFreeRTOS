@@ -62,6 +62,11 @@
 
 #define QUEUE_SIZE 16
 
+#define BUTTON_QUEUE_FREQ 50
+#define ALITUDE_MEAS_FREQ 10
+//#define YAW_MEAS_FREQ 10
+#define CHECK_QUEUE_FREQ 10
+
 // Global constants .. bad but needed
 /**
  * The amount of time to display the splash screen (in seconds)
@@ -72,29 +77,47 @@ static QueueHandle_t g_button_queue;
 static SemaphoreHandle_t g_button_mutex;
 static int32_t g_altitudeReference;
 static int32_t g_yawReference;
+static int8_t g_heliState;
+
+typedef enum HELI_STATE
+{
+    LANDED = 0,
+    TAKEOFF,
+    FLYING,
+    LANDING,
+}HELI_STATE;
 
 
-// Altitude task
+/*
+ * Initiates the alitude measurement,
+ * Gets the current height
+ */
 void GetAltitude(void *pvParameters)
 {
     while (1) {
         alt_process_adc();
         int32_t height = alt_update();
-        vTaskDelay(100 / portTICK_RATE_MS);  //  Current frequency is
+        vTaskDelay(1 / (ALITUDE_MEAS_FREQ * portTICK_RATE_MS));  //  Current frequency is
     }
     // No way to kill this task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
-// Yaw task
-void GetYaw(void *pvParameters)
+/*
+ * Gets the current yaw by calling the interrupt handler?
+ */
+/*void GetYaw(void *pvParameters)
 {
     while (1) {
-        QDIntHandler();
+        QDIntHandler();//Just calling the interrupt handler does not seem ok
         int32_t yaw = yawInDegrees();
-        vTaskDelay(100 / portTICK_RATE_MS);
+        vTaskDelay(1 / (YAW_MEAS_FREQ * portTICK_RATE_MS));
     }
-}
+}*/
+//Unneccessary task you only need to get the yaw when you need it it should all be dealt with in its own file
 
+/*
+ * Initialise the button queue
+ */
 void initButtonQueue(void)
 {
     g_button_queue = xQueueCreate(QUEUE_SIZE, sizeof(uint8_t));
@@ -102,34 +125,49 @@ void initButtonQueue(void)
 
 }
 
+/*
+ * Check the button state if it has been pushed then
+ * queue it if it has been or in the case of the switch released aswell
+ */
 void CheckQueueButton(uint8_t button)
 {
     //printf("Checking button %d", button);
     uint8_t buttonState;
     buttonState = checkButton(button);
-    if (buttonState == PUSHED)
+    if (buttonState == PUSHED || ((button == SW1) && button == RELEASED))
     {
-
-        if (xSemaphoreTake(g_button_mutex, (TickType_t) 10) == true)
+        if (xSemaphoreTake(g_button_mutex, (TickType_t) 10) == true) //Take mutex
         {
-            xQueueSendToBack(g_button_queue, (void *) &button, (TickType_t) 0);
-            printf("Pushed and Queued %d", button);
-            xSemaphoreGive(g_button_mutex);
+            xQueueSendToBack(g_button_queue, (void *) &button, (TickType_t) 0); //queue
+            xSemaphoreGive(g_button_mutex); //give mutex
         }
     }
 }
+/*
+ * Updates the buttons,
+ * If the helicopter is flying then queue the buttons,
+ * otherwise queue the switch pushes
+ */
 void QueueButtonPushes(void *pvParameters)
 {
     while(1){
         updateButtons();
-        CheckQueueButton(UP);
-        CheckQueueButton(DOWN);
-        CheckQueueButton(LEFT);
-        CheckQueueButton(RIGHT);
-        vTaskDelay(20 / portTICK_RATE_MS);  //  Current frequency is 50Hz
+        if (g_heliState == FLYING) {
+            CheckQueueButton(UP);
+            CheckQueueButton(DOWN);
+            CheckQueueButton(LEFT);
+            CheckQueueButton(RIGHT);
+        } else {
+            CheckQueueButton(SW1);
+        }
+
+        vTaskDelay(1 / (BUTTON_QUEUE_FREQ * portTICK_RATE_MS));
     }
 }
 
+/*
+ * Updates the altitude and yaw references given the button press
+ */
 void UpdateReferences(int8_t pressed_button)
 {
     switch(pressed_button) {
@@ -163,30 +201,77 @@ void UpdateReferences(int8_t pressed_button)
             }
             break;
     }
-
 }
 
+/*
+ * Changes the helicopter state to the given state
+ */
+void changeState(int8_t state_num)
+{
+    g_heliState = state_num;
+}
+
+/* Given the pressed button from the queue
+ * changes the state if the switch was pressed
+ * otherwise updates the altitude and yaw references
+ */
+void ButtonUpdates(int8_t pressed_button)
+{
+    if (pressed_button == SW1)
+    {
+        switch(g_heliState) {
+            case FLYING:
+                changeState(LANDING);
+            case LANDED:
+                changeState(TAKEOFF);
+        }
+    } else {
+        if (g_heliState == FLYING)
+        {
+            UpdateReferences(pressed_button);
+        }
+    }
+}
+
+/*
+ * Checks if there is anything on the button queue
+ * if there has been either changes the state or references
+ */
 void CheckButtonQueue(void *pvParameters)
 {
     int8_t pressed_button = -1;
     while(1) {
         //printf("Checking Button Queue");
-        if (xSemaphoreTake(g_button_mutex, (TickType_t) 10) == true)
+        if (xSemaphoreTake(g_button_mutex, (TickType_t) 10) == true) //takes the mutex if it can
         {
-            if ((uxQueueMessagesWaiting(g_button_queue)) > 0) //Not sure if you need the token for this
+            if ((uxQueueMessagesWaiting(g_button_queue)) > 0)
             {
                 xQueueReceive(g_button_queue, &pressed_button, (TickType_t) 0);
                 UpdateReferences(pressed_button);
 
             }
-            xSemaphoreGive(g_button_mutex);
+            xSemaphoreGive(g_button_mutex); //Gives it back
         }
-        vTaskDelay(100 / portTICK_RATE_MS);
+        vTaskDelay(1 / (CHECK_QUEUE_FREQ * portTICK_RATE_MS));
+
     }
 }
 
+/*
+ * Initialises things for the FSM
+ */
+void initFSM(void)
+{
+    g_heliState = FLYING;
+    g_altitudeReference = 0;
+    g_yawReference = 0;
+}
 
-int main(void)
+/*
+ * Initialises clock, interrupts
+ * and everything for each task
+ */
+void initialise(void)
 {
     // disable all interrupts
     IntMasterDisable();
@@ -195,21 +280,7 @@ int main(void)
     SysCtlClockSet (SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
                     SYSCTL_XTAL_16MHZ);
 
-    // For LED blinky task - initialize GPIO port F and then pin #1 (red) for output
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF); // activate internal bus clocking for GPIO port F
-    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOF)) ; // busy-wait until GPIOF's bus clock is ready
-
-    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1); // PF_1 as output
-    // doesn't need too much drive strength as the RGB LEDs on the TM4C123 launchpad are switched via N-type transistors
-    GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_1, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD);
-    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0); // off by default
-
-    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_2); // PF_2 as output
-    // doesn't need too much drive strength as the RGB LEDs on the TM4C123 launchpad are switched via N-type transistors
-    GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_2, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD);
-    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0); // off by default
-
-    //Initialisation
+    //Initialisation ot things for tasks
     alt_init();     // Altitude and ADC
     disp_init();    // Display
     uart_init();    // UART
@@ -220,6 +291,41 @@ int main(void)
 
     // Enable interrupts to the processor.
     IntMasterEnable();
+}
+
+/*
+ * Creates all the FREERTOS tasks
+ */
+void createTasks(void)
+{
+    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 128, NULL, 4, NULL)) {
+       while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
+    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 512, NULL, 4, NULL)) {
+       while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
+    if (pdTRUE != xTaskCreate(uart_update, "UART send", 512, NULL, 4, NULL)) {
+       while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
+    /*if (pdTRUE != xTaskCreate(GetYaw, "Get Yaw", 128, NULL, 4, NULL)) {
+       while(1);   // Oh no! Must not have had enough memory to create the task.
+    }*/
+
+    if (pdTRUE != xTaskCreate(QueueButtonPushes, "Queue Button Pushes", 32, NULL, 4, NULL)) {
+       while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
+    if (pdTRUE != xTaskCreate(CheckButtonQueue, "Check Button Queue", 32, NULL, 4, NULL)) {
+       while(1);   // Oh no! Must not have had enough memory to create the task.
+    }
+}
+
+int main(void)
+{
+    initialise();
 
     // Render splash screen for a couple of seconds
     disp_calibration();
@@ -227,30 +333,7 @@ int main(void)
     disp_advance_state();
 
     // Initialise tasks
-    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 128, NULL, 4, NULL)) {
-        while(1);   // Oh no! Must not have had enough memory to create the task.
-    }
-
-    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 512, NULL, 4, NULL)) {
-        while(1);   // Oh no! Must not have had enough memory to create the task.
-    }
-
-    if (pdTRUE != xTaskCreate(uart_update, "UART send", 512, NULL, 4, NULL)) {
-        while(1);   // Oh no! Must not have had enough memory to create the task.
-    }
-
-    if (pdTRUE != xTaskCreate(GetYaw, "Get Yaw", 128, NULL, 4, NULL)) {
-        while(1);   // Oh no! Must not have had enough memory to create the task.
-    }
-
-    if (pdTRUE != xTaskCreate(QueueButtonPushes, "Queue Button Pushes", 32, NULL, 4, NULL)) {
-        while(1);   // Oh no! Must not have had enough memory to create the task.
-    }
-
-    if (pdTRUE != xTaskCreate(CheckButtonQueue, "Check Button Queue", 32, NULL, 4, NULL)) {
-        while(1);   // Oh no! Must not have had enough memory to create the task.
-    }
-
+    createTasks();
     vTaskStartScheduler();  // Start FreeRTOS!!
 
     // Should never get here since the RTOS should never "exit".
