@@ -64,7 +64,7 @@
 
 #define BUTTON_QUEUE_FREQ 50
 #define ALITUDE_MEAS_FREQ 10
-//#define YAW_MEAS_FREQ 10
+#define YAW_MEAS_FREQ 10
 #define CHECK_QUEUE_FREQ 10
 
 // Global constants .. bad but needed
@@ -73,8 +73,10 @@
  */
 static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
 
-static QueueHandle_t g_button_queue;
-static SemaphoreHandle_t g_button_mutex;
+static QueueHandle_t g_buttonQueue;
+static SemaphoreHandle_t g_buttonMutex;
+static SemaphoreHandle_t g_changeStateMutex;
+
 static int32_t g_altitudeReference;
 static int32_t g_yawReference;
 static int8_t g_heliState;
@@ -103,25 +105,12 @@ void GetAltitude(void *pvParameters)
 }
 
 /*
- * Gets the current yaw by calling the interrupt handler?
- */
-/*void GetYaw(void *pvParameters)
-{
-    while (1) {
-        QDIntHandler();//Just calling the interrupt handler does not seem ok
-        int32_t yaw = yawInDegrees();
-        vTaskDelay(1 / (YAW_MEAS_FREQ * portTICK_RATE_MS));
-    }
-}*/
-//Unneccessary task you only need to get the yaw when you need it it should all be dealt with in its own file
-
-/*
  * Initialise the button queue
  */
 void initButtonQueue(void)
 {
-    g_button_queue = xQueueCreate(QUEUE_SIZE, sizeof(uint8_t));
-    g_button_mutex = xSemaphoreCreateMutex();
+    g_buttonQueue = xQueueCreate(QUEUE_SIZE, sizeof(uint8_t));
+    g_buttonMutex = xSemaphoreCreateMutex();
 
 }
 
@@ -134,12 +123,12 @@ void CheckQueueButton(uint8_t button)
     //printf("Checking button %d", button);
     uint8_t buttonState;
     buttonState = checkButton(button);
-    if (buttonState == PUSHED || ((button == SW1) && button == RELEASED))
+      if (buttonState == PUSHED || ((button == SW1) && button == RELEASED))
     {
-        if (xSemaphoreTake(g_button_mutex, (TickType_t) 10) == true) //Take mutex
+        if (xSemaphoreTake(g_buttonMutex, (TickType_t) 10) == true) //Take mutex
         {
-            xQueueSendToBack(g_button_queue, (void *) &button, (TickType_t) 0); //queue
-            xSemaphoreGive(g_button_mutex); //give mutex
+            xQueueSendToBack(g_buttonQueue, (void *) &button, (TickType_t) 0); //queue
+            xSemaphoreGive(g_buttonMutex); //give mutex
         }
     }
 }
@@ -208,7 +197,11 @@ void UpdateReferences(int8_t pressed_button)
  */
 void changeState(int8_t state_num)
 {
-    g_heliState = state_num;
+    if (xSemaphoreTake(g_changeStateMutex, (TickType_t) 10) == true) //Take mutex
+    {
+        g_heliState = state_num;
+        xSemaphoreGive(g_changeStateMutex); //give mutex
+    }
 }
 
 /* Given the pressed button from the queue
@@ -226,7 +219,7 @@ void ButtonUpdates(int8_t pressed_button)
                 changeState(TAKEOFF);
         }
     } else {
-        if (g_heliState == FLYING)
+        if (g_heliState == FLYING) // do you need the mutex for equality?
         {
             UpdateReferences(pressed_button);
         }
@@ -242,15 +235,15 @@ void CheckButtonQueue(void *pvParameters)
     int8_t pressed_button = -1;
     while(1) {
         //printf("Checking Button Queue");
-        if (xSemaphoreTake(g_button_mutex, (TickType_t) 10) == true) //takes the mutex if it can
+        if (xSemaphoreTake(g_buttonMutex, (TickType_t) 10) == true) //takes the mutex if it can
         {
-            if ((uxQueueMessagesWaiting(g_button_queue)) > 0)
+            if ((uxQueueMessagesWaiting(g_buttonQueue)) > 0)
             {
-                xQueueReceive(g_button_queue, &pressed_button, (TickType_t) 0);
+                xQueueReceive(g_buttonQueue, &pressed_button, (TickType_t) 0);
                 UpdateReferences(pressed_button);
 
             }
-            xSemaphoreGive(g_button_mutex); //Gives it back
+            xSemaphoreGive(g_buttonMutex); //Gives it back
         }
         vTaskDelay(1 / (CHECK_QUEUE_FREQ * portTICK_RATE_MS));
 
@@ -263,8 +256,9 @@ void CheckButtonQueue(void *pvParameters)
 void initFSM(void)
 {
     g_heliState = FLYING;
-    g_altitudeReference = 0;
-    g_yawReference = 0;
+    g_altitudeReference = 10;
+    g_yawReference = 10;
+    g_changeStateMutex = xSemaphoreCreateMutex();
 }
 
 /*
@@ -285,9 +279,10 @@ void initialise(void)
     disp_init();    // Display
     uart_init();    // UART
     pwm_init();     // PWM (overwrites LED)
-    initQuadDecode(); //Yaw
     initButtonQueue();
     initButtons();
+    initFSM();
+    initYaw();
 
     // Enable interrupts to the processor.
     IntMasterEnable();
@@ -310,9 +305,6 @@ void createTasks(void)
        while(1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    /*if (pdTRUE != xTaskCreate(GetYaw, "Get Yaw", 128, NULL, 4, NULL)) {
-       while(1);   // Oh no! Must not have had enough memory to create the task.
-    }*/
 
     if (pdTRUE != xTaskCreate(QueueButtonPushes, "Queue Button Pushes", 32, NULL, 4, NULL)) {
        while(1);   // Oh no! Must not have had enough memory to create the task.

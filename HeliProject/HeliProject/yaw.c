@@ -5,7 +5,7 @@
  * Modified for ENCE464-20S2 Group 18
  * 2020_07_28 by:
  *  - Derrick Edward
- *  - Sarah Kennelley
+ *  - Sarah Kennelly
  *  - Manu Hamblyn
  *
  *  This code does not make sense, you do not register or deal with the reference yaw
@@ -25,6 +25,13 @@
  * Last modified:  29.05.2019
  *
  * ***************************************************************/
+#define YAW_GPIO_BASE       GPIO_PORTB_BASE //Sets the base for pins J1-03 (PB0, channel A) and J1-04 (PB1, channel B)
+#define YAW_PIN0_GPIO_PIN   GPIO_INT_PIN_0
+#define YAW_PIN1_GPIO_PIN   GPIO_INT_PIN_1
+
+#define YAW_REFERENCE_BASE GPIO_PORTC_BASE
+#define YAW_REFERENCE_PIN GPIO_INT_PIN_4
+
 
 #include <defines.h>
 #include <stdint.h>
@@ -37,30 +44,67 @@
 #include "driverlib/sysctl.h"
 #include "utils/ustdlib.h"
 
+
 // ************************* GLOBALS *****************************************
 int A_B = NULL;
 int YAW = 0;
-int yawDeg = 0;
+int32_t g_referenceYaw;
 
 // ********************** QUADRATURE DECODING FUNCTIONS **********************
-/* Initialises the pins used for quadrature decoding */
-void initQuadDecode(void)
+//********************************************************
+// Interrupt for to check if the helicopter has found the zero yaw reference
+//********************************************************
+void referenceInterrupt(void)
 {
-    SysCtlPeripheralEnable(PHASE_AB_PERIPH);
-    while (!SysCtlPeripheralReady(PHASE_AB_PERIPH));
+    YAW = 0;
+    GPIOIntClear(YAW_REFERENCE_BASE, YAW_REFERENCE_PIN);
+}
+//********************************************************
+// Initializes the quadrature decoders used to calculate the yaw
+//********************************************************
+void initReferenceYaw(void)
+{
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
 
-    GPIOPinTypeQEI(PHASE_AB_PORT_BASE, PHASE_A_PIN | PHASE_B_PIN);      // Sets pin types to be Quad Decoding pins (Just makes Phase B HIGH = 2 instead of 1)
+    // YAW_GPIO_BASE holds the value for Port B base
+    GPIOIntRegister(YAW_REFERENCE_BASE, referenceInterrupt);
 
-    GPIOIntRegister(PHASE_AB_PORT_BASE, QDIntHandler);                  // Sets QDIntHandler to be function to handle interrupt
+    GPIOPinTypeGPIOInput(YAW_REFERENCE_BASE, YAW_REFERENCE_PIN);
 
-    GPIOIntTypeSet(PHASE_AB_PORT_BASE, PHASE_A_INT_PIN,                 // Sets Phase A interrupt on both rising and falling edges
-                   GPIO_BOTH_EDGES);
-    GPIOIntTypeSet(PHASE_AB_PORT_BASE, PHASE_B_INT_PIN,                 // Sets Phase B interrupt on both rising and falling edges
-                   GPIO_BOTH_EDGES);
+    GPIOIntTypeSet(YAW_REFERENCE_BASE, YAW_REFERENCE_PIN,
+    GPIO_FALLING_EDGE);
 
+    GPIOIntEnable(YAW_REFERENCE_BASE, YAW_REFERENCE_PIN);
+    g_referenceYaw = -1;
+}
 
-    GPIOIntEnable(PHASE_AB_PORT_BASE, PHASE_A_INT_PIN                   // Enables interrupts
-                  | PHASE_B_INT_PIN);
+//********************************************************
+// Initialization functions for the clock (incl. SysTick), ADC, display, quadrature.
+//********************************************************
+void initQuadratureGPIO(void)
+{
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+
+    // YAW_GPIO_BASE holds the value for Port B base
+    GPIOIntRegister(YAW_GPIO_BASE, QDIntHandler);
+
+    // YAW_PIN0_GPIO_PIN, YAW_PIN0_GPIO_PIN have the value for pin 0 and pin 1
+    GPIOPinTypeGPIOInput(YAW_GPIO_BASE, YAW_PIN0_GPIO_PIN | YAW_PIN1_GPIO_PIN);
+
+    GPIOIntTypeSet(YAW_GPIO_BASE, YAW_PIN0_GPIO_PIN | YAW_PIN1_GPIO_PIN,
+    GPIO_BOTH_EDGES);
+
+    GPIOIntEnable(YAW_GPIO_BASE, YAW_PIN0_GPIO_PIN | YAW_PIN1_GPIO_PIN);
+
+    // set initial quadrature conditions
+    YAW = GPIOPinRead(YAW_GPIO_BASE,
+    YAW_PIN0_GPIO_PIN | YAW_PIN1_GPIO_PIN);
+}
+
+void initYaw(void)
+{
+    initQuadratureGPIO();
+    initReferenceYaw();
 }
 
 /* Calculates the current state */
@@ -142,11 +186,12 @@ void QDIntHandler(void)
     return;
 }
 
+
 /* Calculates yaw in degrees from slots in yaw disc */
 int yawInDegrees(void)
 {
     IntMasterDisable();
-    yawDeg = YAW * 360 / MAX_YAW;
+    int32_t yawDeg = YAW * 360 / MAX_YAW;
     IntMasterEnable();
 
     if (yawDeg >= 180)

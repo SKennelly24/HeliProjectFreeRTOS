@@ -25,16 +25,13 @@
  * ***************************************************************/
 
 // ************************ GLOBALS *******************************
-extern int A_B;
-extern int YAW;
-extern int yawDeg;
 
 // ********************** PROTOTYPES *****************************
 
 // ****************************************************************
-// initQuadDecode: Initialises the Peripherals, Ports & Pins
+// Initialises Yaw
 // associated with the Quadrature decoding function
-void initQuadDecode(void);
+void initYaw(void);
 
 // ****************************************************************
 // currentQuad: Reads the difference in Pins and returns the value
