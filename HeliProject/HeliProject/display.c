@@ -118,8 +118,8 @@ void disp_Values(void *pvParameters)
         usnprintf(string, sizeof(string), "      Yaw: %4d%c", yawInDegrees(), DISP_SYMBOL_DEGREES);
         OLEDStringDraw(string, 0, 2);
 
-        //usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
-        usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());   // Test only
+        usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
+        //usnprintf(string, sizeof(string), " Altitude: %4d%%", get_rand_percent()));   // Test only
         OLEDStringDraw(string, 0, 3);
 
         vTaskDelay(200 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
