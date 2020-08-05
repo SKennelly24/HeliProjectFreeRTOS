@@ -193,6 +193,30 @@ void UpdateReferences(int8_t pressed_button)
 }
 
 /*
+ * Return the target yaw value in degrees
+ */
+int32_t get_yaw_target(void)
+{
+    return (g_yawReference); //might need to cast to ??
+}
+
+/*
+ * Returns the target altitude value in percent
+ */
+int32_t get_altitude_target(void)
+{
+    return (g_altitudeReference); //might need to cast to ??
+}
+
+/*
+ * Returns the helicopter current state (of FSM)
+ */
+int8_t get_state(void)
+{
+    return (g_heliState);
+}
+
+/*
  * Changes the helicopter state to the given state
  */
 void changeState(int8_t state_num)
