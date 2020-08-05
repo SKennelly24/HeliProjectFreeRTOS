@@ -49,12 +49,10 @@ void uart_send(const char *t_buffer);
  * Transmits the helicopter status via UART.
  */
 //void uart_flight_data_update(KernelTask* t_task);
-
 /**
  * Transmits the kernel duration statuses via UART.
  */
 //void uart_kernel_data_update(KernelTask* t_task);
-
 /**
  * Transmits the helicopter status information via UART.
  */

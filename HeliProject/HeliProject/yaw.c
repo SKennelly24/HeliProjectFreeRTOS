@@ -9,7 +9,7 @@
  *  - Manu Hamblyn
  *
  *
-* ****************************************************************
+ * ****************************************************************
  * QUAD_DECODE.c
  *
  * Module for software quadrature decoding using finite state machine
@@ -43,7 +43,6 @@
 #define PHASE_A_INT_PIN     GPIO_INT_PIN_0          // Interrupt On Phase A Pin
 #define PHASE_B_INT_PIN     GPIO_INT_PIN_1          // Interrupt On Phase B Pin
 
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <yaw.h>
@@ -54,11 +53,11 @@
 #include "driverlib/sysctl.h"
 #include "utils/ustdlib.h"
 
-
 // ************************* GLOBALS *****************************************
 int A_B = NULL;
 int YAW = 0;
 int32_t g_referenceYaw;
+
 
 // ********************** QUADRATURE DECODING FUNCTIONS **********************
 //
@@ -69,6 +68,8 @@ void referenceInterrupt(void)
     YAW = 0;
     GPIOIntClear(YAW_REFERENCE_BASE, YAW_REFERENCE_PIN);
 }
+
+
 //********************************************************
 // Initializes the quadrature decoders used to calculate the yaw
 //********************************************************
@@ -81,12 +82,12 @@ void initReferenceYaw(void)
 
     GPIOPinTypeGPIOInput(YAW_REFERENCE_BASE, YAW_REFERENCE_PIN);
 
-    GPIOIntTypeSet(YAW_REFERENCE_BASE, YAW_REFERENCE_PIN,
-    GPIO_FALLING_EDGE);
+    GPIOIntTypeSet(YAW_REFERENCE_BASE, YAW_REFERENCE_PIN,GPIO_FALLING_EDGE);
 
     GPIOIntEnable(YAW_REFERENCE_BASE, YAW_REFERENCE_PIN);
     g_referenceYaw = -1;
 }
+
 
 //********************************************************
 // Initialization functions for the clock (incl. SysTick), ADC, display, quadrature.
@@ -101,8 +102,7 @@ void initQuadratureGPIO(void)
     // YAW_PIN0_GPIO_PIN, YAW_PIN0_GPIO_PIN have the value for pin 0 and pin 1
     GPIOPinTypeGPIOInput(YAW_GPIO_BASE, YAW_PIN0_GPIO_PIN | YAW_PIN1_GPIO_PIN);
 
-    GPIOIntTypeSet(YAW_GPIO_BASE, YAW_PIN0_GPIO_PIN | YAW_PIN1_GPIO_PIN,
-    GPIO_BOTH_EDGES);
+    GPIOIntTypeSet(YAW_GPIO_BASE, YAW_PIN0_GPIO_PIN | YAW_PIN1_GPIO_PIN,GPIO_BOTH_EDGES);
 
     GPIOIntEnable(YAW_GPIO_BASE, YAW_PIN0_GPIO_PIN | YAW_PIN1_GPIO_PIN);
 
@@ -111,11 +111,13 @@ void initQuadratureGPIO(void)
     YAW_PIN0_GPIO_PIN | YAW_PIN1_GPIO_PIN);
 }
 
+
 void initYaw(void)
 {
     initQuadratureGPIO();
     initReferenceYaw();
 }
+
 
 /* Calculates the current state */
 int currentQuad(void)
@@ -123,6 +125,7 @@ int currentQuad(void)
     return GPIOPinRead(PHASE_AB_PORT_BASE, PHASE_A_PIN)
             - GPIOPinRead(PHASE_AB_PORT_BASE, PHASE_B_PIN);
 }
+
 
 /* Changes global yaw depending on current state of quad decode pins */
 void QDIntHandler(void)

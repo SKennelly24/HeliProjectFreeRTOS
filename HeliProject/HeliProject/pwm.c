@@ -178,6 +178,9 @@ static int8_t g_tail_duty;
  */
 static uint32_t g_pwm_period;
 
+
+//-------------------------------------------------------------------------------
+
 void pwm_init(void)
 {
     // setup the PWM period. It is based on the system clock
@@ -188,38 +191,42 @@ void pwm_init(void)
 
     // initialise the main rotor
     SysCtlPeripheralEnable(PWM_MAIN_PERIPH_PWM);
+
     while (!SysCtlPeripheralReady(PWM_MAIN_PERIPH_PWM));
     SysCtlPeripheralEnable(PWM_MAIN_PERIPH_GPIO);
+
     while (!SysCtlPeripheralReady(PWM_MAIN_PERIPH_GPIO));  // busy-wait until Main PWM and GPIO ready
     GPIOPinConfigure(PWM_MAIN_GPIO_CONFIG);
     GPIOPinTypePWM(PWM_MAIN_GPIO_BASE, PWM_MAIN_GPIO_PIN);
     PWMGenConfigure(PWM_MAIN_BASE, PWM_MAIN_GEN, PWM_GEN_MODE_UP_DOWN | PWM_GEN_MODE_NO_SYNC);
     PWMGenPeriodSet(PWM_MAIN_BASE, PWM_MAIN_GEN, g_pwm_period);
-    pwm_set_main_duty(0);                                   // Set Main rotor PWM to 0 (i.e. off)
+    pwm_set_main_duty(0);                  // Set Main rotor PWM to 0 (i.e. off)
     PWMGenEnable(PWM_MAIN_BASE, PWM_MAIN_GEN);
     PWMOutputState(PWM_MAIN_BASE, PWM_MAIN_OUTBIT, true);
 
     // initialise the tail rotor
     SysCtlPeripheralEnable(PWM_TAIL_PERIPH_PWM);
+
     while (!SysCtlPeripheralReady(PWM_TAIL_PERIPH_PWM));
     SysCtlPeripheralEnable(PWM_TAIL_PERIPH_GPIO);
-    while (!SysCtlPeripheralReady(PWM_TAIL_PERIPH_GPIO));  // busy-wait until Tail PWM and GPIO ready
 
+    while (!SysCtlPeripheralReady(PWM_TAIL_PERIPH_GPIO));  // busy-wait until Tail PWM and GPIO ready
     GPIOPinConfigure(PWM_TAIL_GPIO_CONFIG);
     GPIOPinTypePWM(PWM_TAIL_GPIO_BASE, PWM_TAIL_GPIO_PIN);
     PWMGenConfigure(PWM_TAIL_BASE, PWM_TAIL_GEN, PWM_GEN_MODE_UP_DOWN | PWM_GEN_MODE_NO_SYNC);
     PWMGenPeriodSet(PWM_TAIL_BASE, PWM_TAIL_GEN, g_pwm_period);
-    pwm_set_tail_duty(0);                                   // Set Tail rotor PWM to 0 (i.e. off)
+    pwm_set_tail_duty(0);                  // Set Tail rotor PWM to 0 (i.e. off)
     PWMGenEnable(PWM_TAIL_BASE, PWM_TAIL_GEN);
     PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, true);
 }
 
+
 void pwm_set_main_duty(int8_t t_duty)
 {
     g_main_duty = clamp(t_duty, 0, 100);
-    PWMPulseWidthSet(PWM_MAIN_BASE, PWM_MAIN_OUTNUM,
-                     g_pwm_period * g_main_duty / 100);
+    PWMPulseWidthSet(PWM_MAIN_BASE, PWM_MAIN_OUTNUM,g_pwm_period * g_main_duty / 100);
 }
+
 
 int8_t pwm_get_main_duty(void)
 {
@@ -227,12 +234,13 @@ int8_t pwm_get_main_duty(void)
     return get_rand_percent();    // Test only
 }
 
+
 void pwm_set_tail_duty(int8_t t_duty)
 {
     g_tail_duty = clamp(t_duty, 0, 100);
-    PWMPulseWidthSet(PWM_TAIL_BASE, PWM_TAIL_OUTNUM,
-                     g_pwm_period * g_tail_duty / 100);
+    PWMPulseWidthSet(PWM_TAIL_BASE, PWM_TAIL_OUTNUM,g_pwm_period * g_tail_duty / 100);
 }
+
 
 int8_t pwm_get_tail_duty(void)
 {

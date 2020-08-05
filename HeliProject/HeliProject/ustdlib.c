@@ -69,8 +69,7 @@ ustrncpy(char * restrict s1, const char * restrict s2, size_t n)
     //
     // Check the arguments.
     //
-    ASSERT(s1);
-    ASSERT(s2);
+    ASSERT(s1); ASSERT(s2);
 
     //
     // Start at the beginning of the source string.
@@ -81,7 +80,7 @@ ustrncpy(char * restrict s1, const char * restrict s2, size_t n)
     // Copy the source string until we run out of source characters or
     // destination space.
     //
-    while(n && s2[count])
+    while (n && s2[count])
     {
         s1[count] = s2[count];
         count++;
@@ -91,16 +90,16 @@ ustrncpy(char * restrict s1, const char * restrict s2, size_t n)
     //
     // Pad the destination if we are not yet done.
     //
-    while(n)
+    while (n)
     {
-        s1[count++] = (char)0;
+        s1[count++] = (char) 0;
         n--;
     }
 
     //
     // Pass the destination pointer back to the caller.
     //
-    return(s1);
+    return (s1);
 }
 
 //*****************************************************************************
@@ -154,9 +153,8 @@ ustrncpy(char * restrict s1, const char * restrict s2, size_t n)
 //! buffer.
 //
 //*****************************************************************************
-int
-uvsnprintf(char * restrict s, size_t n, const char * restrict format,
-           va_list arg)
+int uvsnprintf(char * restrict s, size_t n, const char * restrict format,
+               va_list arg)
 {
     unsigned long ulIdx, ulValue, ulCount, ulBase, ulNeg;
     char *pcStr, cFill;
@@ -165,14 +163,12 @@ uvsnprintf(char * restrict s, size_t n, const char * restrict format,
     //
     // Check the arguments.
     //
-    ASSERT(s);
-    ASSERT(n);
-    ASSERT(format);
+    ASSERT(s); ASSERT(n); ASSERT(format);
 
     //
     // Adjust buffer size limit to allow one space for null termination.
     //
-    if(n)
+    if (n)
     {
         n--;
     }
@@ -185,13 +181,13 @@ uvsnprintf(char * restrict s, size_t n, const char * restrict format,
     //
     // Loop while there are more characters in the format string.
     //
-    while(*format)
+    while (*format)
     {
         //
         // Find the first non-% character, or the end of the string.
         //
-        for(ulIdx = 0; (format[ulIdx] != '%') && (format[ulIdx] != '\0');
-            ulIdx++)
+        for (ulIdx = 0; (format[ulIdx] != '%') && (format[ulIdx] != '\0');
+                ulIdx++)
         {
         }
 
@@ -200,7 +196,7 @@ uvsnprintf(char * restrict s, size_t n, const char * restrict format,
         // more characters to write than there is space in the buffer, then
         // only write as much as will fit in the buffer.
         //
-        if(ulIdx > n)
+        if (ulIdx > n)
         {
             ustrncpy(s, format, n);
             s += n;
@@ -228,7 +224,7 @@ uvsnprintf(char * restrict s, size_t n, const char * restrict format,
         //
         // See if the next character is a %.
         //
-        if(*format == '%')
+        if (*format == '%')
         {
             //
             // Skip the %.
@@ -247,229 +243,229 @@ uvsnprintf(char * restrict s, size_t n, const char * restrict format,
             // Goto's aren't pretty, but effective.  I feel extremely dirty for
             // using not one but two of the beasts.
             //
-again:
+            again:
 
             //
             // Determine how to handle the next character.
             //
-            switch(*format++)
+            switch (*format++)
+            {
+            //
+            // Handle the digit characters.
+            //
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
             {
                 //
-                // Handle the digit characters.
+                // If this is a zero, and it is the first digit, then the
+                // fill character is a zero instead of a space.
                 //
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
+                if ((format[-1] == '0') && (ulCount == 0))
                 {
-                    //
-                    // If this is a zero, and it is the first digit, then the
-                    // fill character is a zero instead of a space.
-                    //
-                    if((format[-1] == '0') && (ulCount == 0))
-                    {
-                        cFill = '0';
-                    }
-
-                    //
-                    // Update the digit count.
-                    //
-                    ulCount *= 10;
-                    ulCount += format[-1] - '0';
-
-                    //
-                    // Get the next character.
-                    //
-                    goto again;
+                    cFill = '0';
                 }
+
+                //
+                // Update the digit count.
+                //
+                ulCount *= 10;
+                ulCount += format[-1] - '0';
+
+                //
+                // Get the next character.
+                //
+                goto again;
+            }
 
                 //
                 // Handle the %c command.
                 //
-                case 'c':
+            case 'c':
+            {
+                //
+                // Get the value from the varargs.
+                //
+                ulValue = va_arg(arg, unsigned long);
+
+                //
+                // Copy the character to the output buffer, if there is
+                // room.  Update the buffer size remaining.
+                //
+                if (n != 0)
                 {
-                    //
-                    // Get the value from the varargs.
-                    //
-                    ulValue = va_arg(arg, unsigned long);
-
-                    //
-                    // Copy the character to the output buffer, if there is
-                    // room.  Update the buffer size remaining.
-                    //
-                    if(n != 0)
-                    {
-                        *s++ = (char)ulValue;
-                        n--;
-                    }
-
-                    //
-                    // Update the conversion count.
-                    //
-                    iConvertCount++;
-
-                    //
-                    // This command has been handled.
-                    //
-                    break;
+                    *s++ = (char) ulValue;
+                    n--;
                 }
+
+                //
+                // Update the conversion count.
+                //
+                iConvertCount++;
+
+                //
+                // This command has been handled.
+                //
+                break;
+            }
 
                 //
                 // Handle the %d and %i commands.
                 //
-                case 'd':
-                case 'i':
+            case 'd':
+            case 'i':
+            {
+                //
+                // Get the value from the varargs.
+                //
+                ulValue = va_arg(arg, unsigned long);
+
+                //
+                // If the value is negative, make it positive and indicate
+                // that a minus sign is needed.
+                //
+                if ((long) ulValue < 0)
                 {
                     //
-                    // Get the value from the varargs.
+                    // Make the value positive.
                     //
-                    ulValue = va_arg(arg, unsigned long);
+                    ulValue = -(long) ulValue;
 
                     //
-                    // If the value is negative, make it positive and indicate
-                    // that a minus sign is needed.
+                    // Indicate that the value is negative.
                     //
-                    if((long)ulValue < 0)
-                    {
-                        //
-                        // Make the value positive.
-                        //
-                        ulValue = -(long)ulValue;
-
-                        //
-                        // Indicate that the value is negative.
-                        //
-                        ulNeg = 1;
-                    }
-                    else
-                    {
-                        //
-                        // Indicate that the value is positive so that a
-                        // negative sign isn't inserted.
-                        //
-                        ulNeg = 0;
-                    }
-
-                    //
-                    // Set the base to 10.
-                    //
-                    ulBase = 10;
-
-                    //
-                    // Convert the value to ASCII.
-                    //
-                    goto convert;
+                    ulNeg = 1;
                 }
+                else
+                {
+                    //
+                    // Indicate that the value is positive so that a
+                    // negative sign isn't inserted.
+                    //
+                    ulNeg = 0;
+                }
+
+                //
+                // Set the base to 10.
+                //
+                ulBase = 10;
+
+                //
+                // Convert the value to ASCII.
+                //
+                goto convert;
+            }
 
                 //
                 // Handle the %s command.
                 //
-                case 's':
+            case 's':
+            {
+                //
+                // Get the string pointer from the varargs.
+                //
+                pcStr = va_arg(arg, char *);
+
+                //
+                // Determine the length of the string.
+                //
+                for (ulIdx = 0; pcStr[ulIdx] != '\0'; ulIdx++)
                 {
-                    //
-                    // Get the string pointer from the varargs.
-                    //
-                    pcStr = va_arg(arg, char *);
+                }
+
+                //
+                // Update the convert count to include any padding that
+                // should be necessary (regardless of whether we have space
+                // to write it or not).
+                //
+                if (ulCount > ulIdx)
+                {
+                    iConvertCount += (ulCount - ulIdx);
+                }
+
+                //
+                // Copy the string to the output buffer.  Only copy as much
+                // as will fit in the buffer.  Update the output buffer
+                // pointer and the space remaining.
+                //
+                if (ulIdx > n)
+                {
+                    ustrncpy(s, pcStr, n);
+                    s += n;
+                    n = 0;
+                }
+                else
+                {
+                    ustrncpy(s, pcStr, ulIdx);
+                    s += ulIdx;
+                    n -= ulIdx;
 
                     //
-                    // Determine the length of the string.
+                    // Write any required padding spaces assuming there is
+                    // still space in the buffer.
                     //
-                    for(ulIdx = 0; pcStr[ulIdx] != '\0'; ulIdx++)
+                    if (ulCount > ulIdx)
                     {
-                    }
-
-                    //
-                    // Update the convert count to include any padding that
-                    // should be necessary (regardless of whether we have space
-                    // to write it or not).
-                    //
-                    if(ulCount > ulIdx)
-                    {
-                        iConvertCount += (ulCount - ulIdx);
-                    }
-
-                    //
-                    // Copy the string to the output buffer.  Only copy as much
-                    // as will fit in the buffer.  Update the output buffer
-                    // pointer and the space remaining.
-                    //
-                    if(ulIdx > n)
-                    {
-                        ustrncpy(s, pcStr, n);
-                        s += n;
-                        n = 0;
-                    }
-                    else
-                    {
-                        ustrncpy(s, pcStr, ulIdx);
-                        s += ulIdx;
-                        n -= ulIdx;
-
-                        //
-                        // Write any required padding spaces assuming there is
-                        // still space in the buffer.
-                        //
-                        if(ulCount > ulIdx)
+                        ulCount -= ulIdx;
+                        if (ulCount > n)
                         {
-                            ulCount -= ulIdx;
-                            if(ulCount > n)
-                            {
-                                ulCount = n;
-                            }
-                            n = -ulCount;
+                            ulCount = n;
+                        }
+                        n = -ulCount;
 
-                            while(ulCount--)
-                            {
-                                *s++ = ' ';
-                            }
+                        while (ulCount--)
+                        {
+                            *s++ = ' ';
                         }
                     }
-
-                    //
-                    // Update the conversion count.  This will be the number of
-                    // characters that should have been written, even if there
-                    // was not room in the buffer.
-                    //
-                    iConvertCount += ulIdx;
-
-                    //
-                    // This command has been handled.
-                    //
-                    break;
                 }
+
+                //
+                // Update the conversion count.  This will be the number of
+                // characters that should have been written, even if there
+                // was not room in the buffer.
+                //
+                iConvertCount += ulIdx;
+
+                //
+                // This command has been handled.
+                //
+                break;
+            }
 
                 //
                 // Handle the %u command.
                 //
-                case 'u':
-                {
-                    //
-                    // Get the value from the varargs.
-                    //
-                    ulValue = va_arg(arg, unsigned long);
+            case 'u':
+            {
+                //
+                // Get the value from the varargs.
+                //
+                ulValue = va_arg(arg, unsigned long);
 
-                    //
-                    // Set the base to 10.
-                    //
-                    ulBase = 10;
+                //
+                // Set the base to 10.
+                //
+                ulBase = 10;
 
-                    //
-                    // Indicate that the value is positive so that a minus sign
-                    // isn't inserted.
-                    //
-                    ulNeg = 0;
+                //
+                // Indicate that the value is positive so that a minus sign
+                // isn't inserted.
+                //
+                ulNeg = 0;
 
-                    //
-                    // Convert the value to ASCII.
-                    //
-                    goto convert;
-                }
+                //
+                // Convert the value to ASCII.
+                //
+                goto convert;
+            }
 
                 //
                 // Handle the %x and %X commands.  Note that they are treated
@@ -477,129 +473,88 @@ again:
                 // instead of the upper case letters is should use.  We also
                 // alias %p to %x.
                 //
-                case 'x':
-                case 'X':
-                case 'p':
+            case 'x':
+            case 'X':
+            case 'p':
+            {
+                //
+                // Get the value from the varargs.
+                //
+                ulValue = va_arg(arg, unsigned long);
+
+                //
+                // Set the base to 16.
+                //
+                ulBase = 16;
+
+                //
+                // Indicate that the value is positive so that a minus sign
+                // isn't inserted.
+                //
+                ulNeg = 0;
+
+                //
+                // Determine the number of digits in the string version of
+                // the value.
+                //
+                convert: for (ulIdx = 1;
+                        (((ulIdx * ulBase) <= ulValue)
+                                && (((ulIdx * ulBase) / ulBase) == ulIdx));
+                        ulIdx *= ulBase, ulCount--)
+                {
+                }
+
+                //
+                // If the value is negative, reduce the count of padding
+                // characters needed.
+                //
+                if (ulNeg)
+                {
+                    ulCount--;
+                }
+
+                //
+                // If the value is negative and the value is padded with
+                // zeros, then place the minus sign before the padding.
+                //
+                if (ulNeg && (n != 0) && (cFill == '0'))
                 {
                     //
-                    // Get the value from the varargs.
+                    // Place the minus sign in the output buffer.
                     //
-                    ulValue = va_arg(arg, unsigned long);
+                    *s++ = '-';
+                    n--;
 
                     //
-                    // Set the base to 16.
+                    // Update the conversion count.
                     //
-                    ulBase = 16;
+                    iConvertCount++;
 
                     //
-                    // Indicate that the value is positive so that a minus sign
-                    // isn't inserted.
+                    // The minus sign has been placed, so turn off the
+                    // negative flag.
                     //
                     ulNeg = 0;
+                }
 
+                //
+                // See if there are more characters in the specified field
+                // width than there are in the conversion of this value.
+                //
+                if ((ulCount > 1) && (ulCount < 65536))
+                {
                     //
-                    // Determine the number of digits in the string version of
-                    // the value.
+                    // Loop through the required padding characters.
                     //
-convert:
-                    for(ulIdx = 1;
-                        (((ulIdx * ulBase) <= ulValue) &&
-                         (((ulIdx * ulBase) / ulBase) == ulIdx));
-                        ulIdx *= ulBase, ulCount--)
-                    {
-                    }
-
-                    //
-                    // If the value is negative, reduce the count of padding
-                    // characters needed.
-                    //
-                    if(ulNeg)
-                    {
-                        ulCount--;
-                    }
-
-                    //
-                    // If the value is negative and the value is padded with
-                    // zeros, then place the minus sign before the padding.
-                    //
-                    if(ulNeg && (n != 0) && (cFill == '0'))
+                    for (ulCount--; ulCount; ulCount--)
                     {
                         //
-                        // Place the minus sign in the output buffer.
+                        // Copy the character to the output buffer if there
+                        // is room.
                         //
-                        *s++ = '-';
-                        n--;
-
-                        //
-                        // Update the conversion count.
-                        //
-                        iConvertCount++;
-
-                        //
-                        // The minus sign has been placed, so turn off the
-                        // negative flag.
-                        //
-                        ulNeg = 0;
-                    }
-
-                    //
-                    // See if there are more characters in the specified field
-                    // width than there are in the conversion of this value.
-                    //
-                    if((ulCount > 1) && (ulCount < 65536))
-                    {
-                        //
-                        // Loop through the required padding characters.
-                        //
-                        for(ulCount--; ulCount; ulCount--)
+                        if (n != 0)
                         {
-                            //
-                            // Copy the character to the output buffer if there
-                            // is room.
-                            //
-                            if(n != 0)
-                            {
-                                *s++ = cFill;
-                                n--;
-                            }
-
-                            //
-                            // Update the conversion count.
-                            //
-                            iConvertCount++;
-                        }
-                    }
-
-                    //
-                    // If the value is negative, then place the minus sign
-                    // before the number.
-                    //
-                    if(ulNeg && (n != 0))
-                    {
-                        //
-                        // Place the minus sign in the output buffer.
-                        //
-                        *s++ = '-';
-                        n--;
-
-                        //
-                        // Update the conversion count.
-                        //
-                        iConvertCount++;
-                    }
-
-                    //
-                    // Convert the value into a string.
-                    //
-                    for(; ulIdx; ulIdx /= ulBase)
-                    {
-                        //
-                        // Copy the character to the output buffer if there is
-                        // room.
-                        //
-                        if(n != 0)
-                        {
-                            *s++ = g_pcHex[(ulValue / ulIdx) % ulBase];
+                            *s++ = cFill;
                             n--;
                         }
 
@@ -608,24 +563,38 @@ convert:
                         //
                         iConvertCount++;
                     }
-
-                    //
-                    // This command has been handled.
-                    //
-                    break;
                 }
 
                 //
-                // Handle the %% command.
+                // If the value is negative, then place the minus sign
+                // before the number.
                 //
-                case '%':
+                if (ulNeg && (n != 0))
                 {
                     //
-                    // Simply write a single %.
+                    // Place the minus sign in the output buffer.
                     //
-                    if(n != 0)
+                    *s++ = '-';
+                    n--;
+
+                    //
+                    // Update the conversion count.
+                    //
+                    iConvertCount++;
+                }
+
+                //
+                // Convert the value into a string.
+                //
+                for (; ulIdx; ulIdx /= ulBase)
+                {
+                    //
+                    // Copy the character to the output buffer if there is
+                    // room.
+                    //
+                    if (n != 0)
                     {
-                        *s++ = format[-1];
+                        *s++ = g_pcHex[(ulValue / ulIdx) % ulBase];
                         n--;
                     }
 
@@ -633,44 +602,70 @@ convert:
                     // Update the conversion count.
                     //
                     iConvertCount++;
-
-                    //
-                    // This command has been handled.
-                    //
-                    break;
                 }
+
+                //
+                // This command has been handled.
+                //
+                break;
+            }
+
+                //
+                // Handle the %% command.
+                //
+            case '%':
+            {
+                //
+                // Simply write a single %.
+                //
+                if (n != 0)
+                {
+                    *s++ = format[-1];
+                    n--;
+                }
+
+                //
+                // Update the conversion count.
+                //
+                iConvertCount++;
+
+                //
+                // This command has been handled.
+                //
+                break;
+            }
 
                 //
                 // Handle all other commands.
                 //
-                default:
+            default:
+            {
+                //
+                // Indicate an error.
+                //
+                if (n >= 5)
                 {
-                    //
-                    // Indicate an error.
-                    //
-                    if(n >= 5)
-                    {
-                        ustrncpy(s, "ERROR", 5);
-                        s += 5;
-                        n -= 5;
-                    }
-                    else
-                    {
-                        ustrncpy(s, "ERROR", n);
-                        s += n;
-                        n = 0;
-                    }
-
-                    //
-                    // Update the conversion count.
-                    //
-                    iConvertCount += 5;
-
-                    //
-                    // This command has been handled.
-                    //
-                    break;
+                    ustrncpy(s, "ERROR", 5);
+                    s += 5;
+                    n -= 5;
                 }
+                else
+                {
+                    ustrncpy(s, "ERROR", n);
+                    s += n;
+                    n = 0;
+                }
+
+                //
+                // Update the conversion count.
+                //
+                iConvertCount += 5;
+
+                //
+                // This command has been handled.
+                //
+                break;
+            }
             }
         }
     }
@@ -683,7 +678,7 @@ convert:
     //
     // Return the number of characters in the full converted string.
     //
-    return(iConvertCount);
+    return (iConvertCount);
 }
 
 //*****************************************************************************
@@ -727,8 +722,7 @@ convert:
 //! buffer, not including the NULL termination character.
 //
 //*****************************************************************************
-int
-usprintf(char * restrict s, const char *format, ...)
+int usprintf(char * restrict s, const char *format, ...)
 {
     va_list arg;
     int ret;
@@ -752,7 +746,7 @@ usprintf(char * restrict s, const char *format, ...)
     //
     // Return the conversion count.
     //
-    return(ret);
+    return (ret);
 }
 
 //*****************************************************************************
@@ -805,8 +799,7 @@ usprintf(char * restrict s, const char *format, ...)
 //! buffer.
 //
 //*****************************************************************************
-int
-usnprintf(char * restrict s, size_t n, const char * restrict format, ...)
+int usnprintf(char * restrict s, size_t n, const char * restrict format, ...)
 {
     va_list arg;
     int ret;
@@ -829,7 +822,7 @@ usnprintf(char * restrict s, size_t n, const char * restrict format, ...)
     //
     // Return the conversion count.
     //
-    return(ret);
+    return (ret);
 }
 
 //*****************************************************************************
@@ -838,10 +831,8 @@ usnprintf(char * restrict s, size_t n, const char * restrict format, ...)
 // month of the year, in a non-leap year.
 //
 //*****************************************************************************
-static const time_t g_psDaysToMonth[12] =
-{
-    0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
-};
+static const time_t g_psDaysToMonth[12] = { 0, 31, 59, 90, 120, 151, 181, 212,
+                                            243, 273, 304, 334 };
 
 //*****************************************************************************
 //
@@ -858,8 +849,7 @@ static const time_t g_psDaysToMonth[12] =
 //! \return None.
 //
 //*****************************************************************************
-void
-ulocaltime(time_t timer, struct tm *tm)
+void ulocaltime(time_t timer, struct tm *tm)
 {
     time_t temp, months;
 
@@ -897,7 +887,7 @@ ulocaltime(time_t timer, struct tm *tm)
     //
     timer += 366 + 365;
     temp = timer / ((4 * 365) + 1);
-    if((timer - (temp * ((4 * 365) + 1))) > (31 + 28))
+    if ((timer - (temp * ((4 * 365) + 1))) > (31 + 28))
     {
         temp++;
         months = 12;
@@ -916,9 +906,9 @@ ulocaltime(time_t timer, struct tm *tm)
     //
     // Extract the month.
     //
-    for(temp = 0; temp < months; temp++)
+    for (temp = 0; temp < months; temp++)
     {
-        if(g_psDaysToMonth[temp] > timer)
+        if (g_psDaysToMonth[temp] > timer)
         {
             break;
         }
@@ -950,60 +940,59 @@ ulocaltime(time_t timer, struct tm *tm)
 //! than \e t2, and -1 if \e t1 is less than \e t2.
 //
 //*****************************************************************************
-static int
-ucmptime(struct tm *t1, struct tm *t2)
+static int ucmptime(struct tm *t1, struct tm *t2)
 {
     //
     // Compare each field in descending signficance to determine if
     // greater than, less than, or equal.
     //
-    if(t1->tm_year > t2->tm_year)
+    if (t1->tm_year > t2->tm_year)
     {
-        return(1);
+        return (1);
     }
-    else if(t1->tm_year < t2->tm_year)
+    else if (t1->tm_year < t2->tm_year)
     {
-        return(-1);
+        return (-1);
     }
-    else if(t1->tm_mon > t2->tm_mon)
+    else if (t1->tm_mon > t2->tm_mon)
     {
-        return(1);
+        return (1);
     }
-    else if(t1->tm_mon < t2->tm_mon)
+    else if (t1->tm_mon < t2->tm_mon)
     {
-        return(-1);
+        return (-1);
     }
-    else if(t1->tm_mday > t2->tm_mday)
+    else if (t1->tm_mday > t2->tm_mday)
     {
-        return(1);
+        return (1);
     }
-    else if(t1->tm_mday < t2->tm_mday)
+    else if (t1->tm_mday < t2->tm_mday)
     {
-        return(-1);
+        return (-1);
     }
-    else if(t1->tm_hour > t2->tm_hour)
+    else if (t1->tm_hour > t2->tm_hour)
     {
-        return(1);
+        return (1);
     }
-    else if(t1->tm_hour < t2->tm_hour)
+    else if (t1->tm_hour < t2->tm_hour)
     {
-        return(-1);
+        return (-1);
     }
-    else if(t1->tm_min > t2->tm_min)
+    else if (t1->tm_min > t2->tm_min)
     {
-        return(1);
+        return (1);
     }
-    else if(t1->tm_min < t2->tm_min)
+    else if (t1->tm_min < t2->tm_min)
     {
-        return(-1);
+        return (-1);
     }
-    else if(t1->tm_sec > t2->tm_sec)
+    else if (t1->tm_sec > t2->tm_sec)
     {
-        return(1);
+        return (1);
     }
-    else if(t1->tm_sec < t2->tm_sec)
+    else if (t1->tm_sec < t2->tm_sec)
     {
-        return(-1);
+        return (-1);
     }
     else
     {
@@ -1011,7 +1000,7 @@ ucmptime(struct tm *t1, struct tm *t2)
         // Reaching this branch of the conditional means that all of the
         // fields are equal, and thus the two times are equal.
         //
-        return(0);
+        return (0);
     }
 }
 
@@ -1030,8 +1019,7 @@ ucmptime(struct tm *t1, struct tm *t2)
 //! was not possible then the function returns (uint32_t)(-1).
 //
 //*****************************************************************************
-time_t
-umktime(struct tm *timeptr)
+time_t umktime(struct tm *timeptr)
 {
     struct tm sTimeGuess;
     unsigned long ulTimeGuess = 0x80000000;
@@ -1047,14 +1035,15 @@ umktime(struct tm *timeptr)
     //
     // While the time is not yet found, execute a binary search.
     //
-    while(iSign && ulAdjust)
+    while (iSign && ulAdjust)
     {
         //
         // Adjust the time guess up or down depending on the result of the
         // last compare.
         //
-        ulTimeGuess = ((iSign > 0) ? (ulTimeGuess + ulAdjust) :
-                       (ulTimeGuess - ulAdjust));
+        ulTimeGuess = (
+                (iSign > 0) ?
+                        (ulTimeGuess + ulAdjust) : (ulTimeGuess - ulAdjust));
         ulAdjust /= 2;
 
         //
@@ -1069,9 +1058,9 @@ umktime(struct tm *timeptr)
     // If the above loop was exited with iSign == 0, that means that the
     // time in seconds was found, so return that value to the caller.
     //
-    if(iSign == 0)
+    if (iSign == 0)
     {
-        return(ulTimeGuess);
+        return (ulTimeGuess);
     }
 
     //
@@ -1079,7 +1068,7 @@ umktime(struct tm *timeptr)
     //
     else
     {
-        return((unsigned long)-1);
+        return ((unsigned long) -1);
     }
 }
 
@@ -1100,8 +1089,8 @@ umktime(struct tm *timeptr)
 //! \return Returns the result of the conversion.
 //
 //*****************************************************************************
-unsigned long
-ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
+unsigned long ustrtoul(const char * restrict nptr,
+                       const char ** restrict endptr, int base)
 {
     unsigned long ulRet, ulDigit, ulNeg, ulValid;
     const char *pcPtr;
@@ -1109,8 +1098,7 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
     //
     // Check the arguments.
     //
-    ASSERT(nptr);
-    ASSERT((base == 0) || ((base > 1) && (base <= 16)));
+    ASSERT(nptr); ASSERT((base == 0) || ((base > 1) && (base <= 16)));
 
     //
     // Initially, the result is zero.
@@ -1123,7 +1111,7 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
     // Skip past any leading white space.
     //
     pcPtr = nptr;
-    while((*pcPtr == ' ') || (*pcPtr == '\t'))
+    while ((*pcPtr == ' ') || (*pcPtr == '\t'))
     {
         pcPtr++;
     }
@@ -1131,12 +1119,12 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
     //
     // Take a leading + or - from the value.
     //
-    if(*pcPtr == '-')
+    if (*pcPtr == '-')
     {
         ulNeg = 1;
         pcPtr++;
     }
-    else if(*pcPtr == '+')
+    else if (*pcPtr == '+')
     {
         pcPtr++;
     }
@@ -1145,8 +1133,8 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
     // See if the radix was not specified, or is 16, and the value starts with
     // "0x" or "0X" (to indicate a hex value).
     //
-    if(((base == 0) || (base == 16)) && (*pcPtr == '0') &&
-       ((pcPtr[1] == 'x') || (pcPtr[1] == 'X')))
+    if (((base == 0) || (base == 16)) && (*pcPtr == '0')
+            && ((pcPtr[1] == 'x') || (pcPtr[1] == 'X')))
     {
         //
         // Skip the leading "0x".
@@ -1162,12 +1150,12 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
     //
     // See if the radix was not specified.
     //
-    if(base == 0)
+    if (base == 0)
     {
         //
         // See if the value starts with "0".
         //
-        if(*pcPtr == '0')
+        if (*pcPtr == '0')
         {
             //
             // Values that start with "0" are assumed to be radix 8.
@@ -1186,12 +1174,12 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
     //
     // Loop while there are more valid digits to consume.
     //
-    while(1)
+    while (1)
     {
         //
         // See if this character is a number.
         //
-        if((*pcPtr >= '0') && (*pcPtr <= '9'))
+        if ((*pcPtr >= '0') && (*pcPtr <= '9'))
         {
             //
             // Convert the character to its integer equivalent.
@@ -1202,7 +1190,7 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
         //
         // Otherwise, see if this character is an upper case letter.
         //
-        else if((*pcPtr >= 'A') && (*pcPtr <= 'Z'))
+        else if ((*pcPtr >= 'A') && (*pcPtr <= 'Z'))
         {
             //
             // Convert the character to its integer equivalent.
@@ -1213,7 +1201,7 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
         //
         // Otherwise, see if this character is a lower case letter.
         //
-        else if((*pcPtr >= 'a') && (*pcPtr <= 'z'))
+        else if ((*pcPtr >= 'a') && (*pcPtr <= 'z'))
         {
             //
             // Convert the character to its integer equivalent.
@@ -1235,7 +1223,7 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
         //
         // See if this digit is valid for the chosen radix.
         //
-        if(ulDigit >= base)
+        if (ulDigit >= base)
         {
             //
             // Since this was not a valid digit, move the pointer back to the
@@ -1264,7 +1252,7 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
     //
     // Set the return string pointer to the first character not consumed.
     //
-    if(endptr)
+    if (endptr)
     {
         *endptr = ulValid ? pcPtr : nptr;
     }
@@ -1272,7 +1260,7 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
     //
     // Return the converted value.
     //
-    return(ulNeg ? (0 - ulRet) : ulRet);
+    return (ulNeg ? (0 - ulRet) : ulRet);
 }
 
 //*****************************************************************************
@@ -1282,15 +1270,8 @@ ustrtoul(const char * restrict nptr, const char ** restrict endptr, int base)
 // 10^exp.
 //
 //*****************************************************************************
-static const float g_pfExponents[] =
-{
-    1.0e+01,
-    1.0e+02,
-    1.0e+04,
-    1.0e+08,
-    1.0e+16,
-    1.0e+32,
-};
+static const float g_pfExponents[] = { 1.0e+01, 1.0e+02, 1.0e+04, 1.0e+08,
+                                       1.0e+16, 1.0e+32, };
 
 //*****************************************************************************
 //
@@ -1309,8 +1290,7 @@ static const float g_pfExponents[] =
 //! \return Returns the result of the conversion.
 //
 //*****************************************************************************
-float
-ustrtof(const char *nptr, const char **endptr)
+float ustrtof(const char *nptr, const char **endptr)
 {
     unsigned long ulNeg, ulExp, ulExpNeg, ulValid, ulIdx;
     float fRet, fDigit, fExp;
@@ -1332,7 +1312,7 @@ ustrtof(const char *nptr, const char **endptr)
     // Skip past any leading white space.
     //
     pcPtr = nptr;
-    while((*pcPtr == ' ') || (*pcPtr == '\t'))
+    while ((*pcPtr == ' ') || (*pcPtr == '\t'))
     {
         pcPtr++;
     }
@@ -1340,12 +1320,12 @@ ustrtof(const char *nptr, const char **endptr)
     //
     // Take a leading + or - from the value.
     //
-    if(*pcPtr == '-')
+    if (*pcPtr == '-')
     {
         ulNeg = 1;
         pcPtr++;
     }
-    else if(*pcPtr == '+')
+    else if (*pcPtr == '+')
     {
         pcPtr++;
     }
@@ -1353,7 +1333,7 @@ ustrtof(const char *nptr, const char **endptr)
     //
     // Loop while there are valid digits to consume.
     //
-    while((*pcPtr >= '0') && (*pcPtr <= '9'))
+    while ((*pcPtr >= '0') && (*pcPtr <= '9'))
     {
         //
         // Add this digit to the converted value.
@@ -1371,7 +1351,7 @@ ustrtof(const char *nptr, const char **endptr)
     // See if the next character is a period and the character after that is a
     // digit, indicating the start of the fractional portion of the value.
     //
-    if((*pcPtr == '.') && (pcPtr[1] >= '0') && (pcPtr[1] <= '9'))
+    if ((*pcPtr == '.') && (pcPtr[1] >= '0') && (pcPtr[1] <= '9'))
     {
         //
         // Skip the period.
@@ -1382,13 +1362,13 @@ ustrtof(const char *nptr, const char **endptr)
         // Loop while there are valid fractional digits to consume.
         //
         fDigit = 0.1;
-        while((*pcPtr >= '0') && (*pcPtr <= '9'))
+        while ((*pcPtr >= '0') && (*pcPtr <= '9'))
         {
             //
             // Add this digit to the converted value.
             //
             fRet += (*pcPtr++ - '0') * fDigit;
-            fDigit /= (float)10.0;
+            fDigit /= (float) 10.0;
 
             //
             // Since a digit has been added, this is now a valid result.
@@ -1401,10 +1381,10 @@ ustrtof(const char *nptr, const char **endptr)
     // See if the next character is an "e" and a valid number has been
     // converted, indicating the start of the exponent.
     //
-    if(((pcPtr[0] == 'e') || (pcPtr[0] == 'E')) && (ulValid == 1) &&
-       (((pcPtr[1] >= '0') && (pcPtr[1] <= '9')) ||
-        (((pcPtr[1] == '+') || (pcPtr[1] == '-')) &&
-         (pcPtr[2] >= '0') && (pcPtr[2] <= '9'))))
+    if (((pcPtr[0] == 'e') || (pcPtr[0] == 'E')) && (ulValid == 1)
+            && (((pcPtr[1] >= '0') && (pcPtr[1] <= '9'))
+                    || (((pcPtr[1] == '+') || (pcPtr[1] == '-'))
+                            && (pcPtr[2] >= '0') && (pcPtr[2] <= '9'))))
     {
         //
         // Skip the "e".
@@ -1415,12 +1395,12 @@ ustrtof(const char *nptr, const char **endptr)
         // Take a leading + or - from the exponenet.
         //
         ulExpNeg = 0;
-        if(*pcPtr == '-')
+        if (*pcPtr == '-')
         {
             ulExpNeg = 1;
             pcPtr++;
         }
-        else if(*pcPtr == '+')
+        else if (*pcPtr == '+')
         {
             pcPtr++;
         }
@@ -1429,7 +1409,7 @@ ustrtof(const char *nptr, const char **endptr)
         // Loop while there are valid digits in the exponent.
         //
         ulExp = 0;
-        while((*pcPtr >= '0') && (*pcPtr <= '9'))
+        while ((*pcPtr >= '0') && (*pcPtr <= '9'))
         {
             //
             // Add this digit to the converted value.
@@ -1445,9 +1425,9 @@ ustrtof(const char *nptr, const char **endptr)
         // (extracted from the table above).
         //
         fExp = 1;
-        for(ulIdx = 0; ulIdx < 7; ulIdx++)
+        for (ulIdx = 0; ulIdx < 7; ulIdx++)
         {
-            if(ulExp & (1 << ulIdx))
+            if (ulExp & (1 << ulIdx))
             {
                 fExp *= g_pfExponents[ulIdx];
             }
@@ -1456,7 +1436,7 @@ ustrtof(const char *nptr, const char **endptr)
         //
         // If the exponent is negative, then the exponent needs to be inverted.
         //
-        if(ulExpNeg == 1)
+        if (ulExpNeg == 1)
         {
             fExp = 1 / fExp;
         }
@@ -1470,7 +1450,7 @@ ustrtof(const char *nptr, const char **endptr)
     //
     // Set the return string pointer to the first character not consumed.
     //
-    if(endptr)
+    if (endptr)
     {
         *endptr = ulValid ? pcPtr : nptr;
     }
@@ -1478,7 +1458,7 @@ ustrtof(const char *nptr, const char **endptr)
     //
     // Return the converted value.
     //
-    return(ulNeg ? (0 - fRet) : fRet);
+    return (ulNeg ? (0 - fRet) : fRet);
 }
 
 //*****************************************************************************
@@ -1497,8 +1477,7 @@ ustrtof(const char *nptr, const char **endptr)
 //! \return Returns the length of the string pointed to by \e s.
 //
 //*****************************************************************************
-size_t
-ustrlen(const char *s)
+size_t ustrlen(const char *s)
 {
     size_t len;
 
@@ -1515,7 +1494,7 @@ ustrlen(const char *s)
     //
     // Step throug the string looking for a zero character (marking its end).
     //
-    while(s[len])
+    while (s[len])
     {
         //
         // Zero not found so move on to the next character.
@@ -1523,7 +1502,7 @@ ustrlen(const char *s)
         len++;
     }
 
-    return(len);
+    return (len);
 }
 
 //*****************************************************************************
@@ -1556,17 +1535,17 @@ ustrstr(const char *s1, const char *s2)
     //
     // Loop while we have not reached the end of the string.
     //
-    while(*s1)
+    while (*s1)
     {
         //
         // Check to see if the substring appears at this position.
         //
-        if(ustrncmp(s2, s1, n) == 0)
+        if (ustrncmp(s2, s1, n) == 0)
         {
             //
             // It does so return the pointer.
             //
-            return((char *)s1);
+            return ((char *) s1);
         }
 
         //
@@ -1579,7 +1558,7 @@ ustrstr(const char *s1, const char *s2)
     // We reached the end of the string without finding the substring so
     // return NULL.
     //
-    return((char *)0);
+    return ((char *) 0);
 }
 
 //*****************************************************************************
@@ -1600,23 +1579,22 @@ ustrstr(const char *s1, const char *s2)
 //! than \e s2 and 1 if \e s1 is greater than \e s2.
 //
 //*****************************************************************************
-int
-ustrncasecmp(const char *s1, const char *s2, size_t n)
+int ustrncasecmp(const char *s1, const char *s2, size_t n)
 {
     char c1, c2;
 
     //
     // Loop while there are more characters to compare.
     //
-    while(n)
+    while (n)
     {
         //
         // If we reached a NULL in both strings, they must be equal so
         // we end the comparison and return 0
         //
-        if(!*s1 && !*s2)
+        if (!*s1 && !*s2)
         {
-            return(0);
+            return (0);
         }
 
         //
@@ -1629,13 +1607,13 @@ ustrncasecmp(const char *s1, const char *s2, size_t n)
         // Compare the two characters and, if different, return the relevant
         // return code.
         //
-        if(c2 < c1)
+        if (c2 < c1)
         {
-            return(1);
+            return (1);
         }
-        if(c1 < c2)
+        if (c1 < c2)
         {
-            return(-1);
+            return (-1);
         }
 
         //
@@ -1650,7 +1628,7 @@ ustrncasecmp(const char *s1, const char *s2, size_t n)
     // If we fall out, the strings must be equal for at least the first n
     // characters so return 0 to indicate this.
     //
-    return(0);
+    return (0);
 }
 
 //*****************************************************************************
@@ -1669,13 +1647,12 @@ ustrncasecmp(const char *s1, const char *s2, size_t n)
 //! than \e s2 and 1 if \e s1 is greater than \e s2.
 //
 //*****************************************************************************
-int
-ustrcasecmp(const char *s1, const char *s2)
+int ustrcasecmp(const char *s1, const char *s2)
 {
     //
     // Just let ustrncasecmp() handle this.
     //
-    return(ustrncasecmp(s1, s2, (size_t)-1));
+    return (ustrncasecmp(s1, s2, (size_t) -1));
 }
 
 //*****************************************************************************
@@ -1696,34 +1673,33 @@ ustrcasecmp(const char *s1, const char *s2)
 //! than \e s2 and 1 if \e s1 is greater than \e s2.
 //
 //*****************************************************************************
-int
-ustrncmp(const char *s1, const char *s2, size_t n)
+int ustrncmp(const char *s1, const char *s2, size_t n)
 {
     //
     // Loop while there are more characters.
     //
-    while(n)
+    while (n)
     {
         //
         // If we reached a NULL in both strings, they must be equal so we end
         // the comparison and return 0
         //
-        if(!*s1 && !*s2)
+        if (!*s1 && !*s2)
         {
-            return(0);
+            return (0);
         }
 
         //
         // Compare the two characters and, if different, return the relevant
         // return code.
         //
-        if(*s2 < *s1)
+        if (*s2 < *s1)
         {
-            return(1);
+            return (1);
         }
-        if(*s1 < *s2)
+        if (*s1 < *s2)
         {
-            return(-1);
+            return (-1);
         }
 
         //
@@ -1738,7 +1714,7 @@ ustrncmp(const char *s1, const char *s2, size_t n)
     // If we fall out, the strings must be equal for at least the first n
     // characters so return 0 to indicate this.
     //
-    return(0);
+    return (0);
 }
 
 //*****************************************************************************
@@ -1757,13 +1733,12 @@ ustrncmp(const char *s1, const char *s2, size_t n)
 //! than \e s2 and 1 if \e s1 is greater than \e s2.
 //
 //*****************************************************************************
-int
-ustrcmp(const char *s1, const char *s2)
+int ustrcmp(const char *s1, const char *s2)
 {
     //
     // Pass this on to ustrncmp.
     //
-    return(ustrncmp(s1, s2, (size_t)-1));
+    return (ustrncmp(s1, s2, (size_t) -1));
 }
 
 //*****************************************************************************
@@ -1786,8 +1761,7 @@ static unsigned int g_iRandomSeed = 1;
 //! \return None
 //
 //*****************************************************************************
-void
-usrand(unsigned int seed)
+void usrand(unsigned int seed)
 {
     g_iRandomSeed = seed;
 }
@@ -1802,8 +1776,7 @@ usrand(unsigned int seed)
 //! \return A pseudo-random number will be returned.
 //
 //*****************************************************************************
-int
-urand(void)
+int urand(void)
 {
     //
     // Generate a new pseudo-random number with a linear congruence random
@@ -1815,7 +1788,7 @@ urand(void)
     //
     // Return the new random number.
     //
-    return((int)g_iRandomSeed);
+    return ((int) g_iRandomSeed);
 }
 
 //*****************************************************************************

@@ -46,21 +46,21 @@
  * Bytecode for rendering degree symbol on the display
  */
 //static const int DISP_SYMBOL_DEGREES = 0x60;
-
 /**
  * Enum of all states the display can be in. Cycled by pressing BTN2
  */
-enum disp_state {
-    DISP_STATE_CALIBRATION,
-    DISP_STATE_ALL,
-    DISP_STATE_TOTAL
+enum disp_state
+{
+    DISP_STATE_CALIBRATION, DISP_STATE_ALL, DISP_STATE_TOTAL
 };
 typedef enum disp_state DisplayState;
+
 
 /**
  * Current display state
  */
 static uint8_t g_displayState = DISP_STATE_CALIBRATION;
+
 
 /**
  * Display raw 12-bit adc reading to the display
@@ -73,6 +73,7 @@ void disp_clear(void)
     OLEDStringDraw("                ", 0, 3);
 }
 
+
 /**
  * Splash screen used during initial calibration while waiting for buffer to fill
  */
@@ -83,6 +84,7 @@ void disp_calibration(void)
     OLEDStringDraw("sek40", 0, 2);
     OLEDStringDraw("dle70", 0, 3);
 }
+
 
 /**
  * Advance display state when BTN2 is pressed
@@ -95,15 +97,17 @@ void disp_advance_state(void)
     }
 }
 
+
 /**
  * Display yaw and altitude percentage at the same time
  * Was disp_all()
  */
 void disp_Values(void *pvParameters)
 {
-    char string[17] = {0};
+    char string[17] = { 0 };
 
-    while (1) {
+    while (1)
+    {
 
         usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
         //usnprintf(string, sizeof(string), "Main Duty: %4d%%", get_rand_percent());    // Test only
@@ -122,11 +126,10 @@ void disp_Values(void *pvParameters)
         //usnprintf(string, sizeof(string), " Altitude: %4d%%", get_rand_percent()));   // Test only
         OLEDStringDraw(string, 0, 3);
 
-        vTaskDelay(200 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
-        }
-        // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
+        vTaskDelay(200 / portTICK_RATE_MS); // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
+    }
+    // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
-
 
 /**
  * Unknown display state fail-safe
@@ -138,7 +141,7 @@ void disp_unknown(void)
 }
 
 /*
-void disp_render(void *pvParameters)
+ void disp_render(void *pvParameters)
 {
     switch (g_displayState)
     {
@@ -152,8 +155,8 @@ void disp_render(void *pvParameters)
         disp_unknown();
         break;
     }
-}
-*/
+}*/
+
 
 void disp_init(void)
 {

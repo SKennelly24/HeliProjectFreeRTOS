@@ -47,10 +47,10 @@ void utils_wait_for_seconds(uint32_t t_delay)
 
 int get_rand_percent()
 {
-    return ( (int) (rand() %100) );
+    return ((int) (rand() % 100));
 }
 
 int get_rand_yaw()
 {
-    return ( (int) (rand() %360) );
+    return ((int) (rand() % 360));
 }

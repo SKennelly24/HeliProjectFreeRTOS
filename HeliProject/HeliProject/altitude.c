@@ -86,6 +86,7 @@ static bool g_has_been_calibrated = false;
 
 static int16_t g_conversions = 0;
 
+
 /**
  * (Original Code by P.J. Bones)
  * The handler for the ADC conversion complete interrupt.
@@ -105,6 +106,7 @@ void alt_adc_int_handler(void)
     // Clean up, clearing the interrupt
     ADCIntClear(ADC_BASE, ADC_SEQUENCE);
 }
+
 
 /**
  * (Original code by P.J. Bones)
@@ -141,6 +143,7 @@ void alt_init_adc(void)
     ADCIntEnable(ADC_BASE, ADC_SEQUENCE);
 }
 
+
 /**
  * (Original code by P.J. Bones)
  * The interrupt handler for the for SysTick interrupt.
@@ -152,6 +155,7 @@ void alt_process_adc(void)
     ADCProcessorTrigger(ADC_BASE, ADC_SEQUENCE);
 }
 
+
 void alt_init(void)
 {
     // initialise the ADC for the altitude
@@ -160,6 +164,7 @@ void alt_init(void)
     // initialise the circular buffers
     initCircBuf(&g_circ_buffer, ALT_BUF_SIZE);
 }
+
 //******************************************************
 //Given the sample mean ADC returns the altitude percent
 //******************************************************
@@ -188,11 +193,13 @@ int32_t getAltitudePercent(int32_t sample_mean_adc)
     }
 }
 
+
 void alt_calibrate(int32_t alt_raw)
 {
     g_alt_ref = alt_raw;
     g_has_been_calibrated = true;
 }
+
 
 int16_t alt_update(void)
 {
@@ -218,6 +225,7 @@ int16_t alt_update(void)
     g_alt_percent = getAltitudePercent(alt_raw);
     return g_alt_percent;
 }
+
 
 int16_t alt_get(void)
 {

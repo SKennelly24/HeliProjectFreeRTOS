@@ -8,7 +8,6 @@
 #ifndef FREERTOSCONFIG_H_
 #define FREERTOSCONFIG_H_
 
-
 /* Per-Project FreeRTOS Configuration */
 
 /*
@@ -54,6 +53,5 @@
 #define configUSE_MUTEXES 1
 
 #define configUSE_COUNTING_SEMAPHORES 1
-
 
 #endif /* FREERTOSCONFIG_H_ */

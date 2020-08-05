@@ -59,7 +59,6 @@ void disp_calibration(void);
  * Then renders to the display based on the value of g_displayState
  */
 //void disp_render(void *pvParameters);
-
 /**
  * New OLED display task
  */

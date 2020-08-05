@@ -41,10 +41,10 @@
  * Finding yaw reference is part of take off,
  * Setting altitude occurs at start-up up so CAL start may not be needed.
  */
-enum flight_mode_state_e { LANDED,
-                                  TAKE_OFF,
-                                  IN_FLIGHT,
-                                  LANDING };
+enum flight_mode_state_e
+{
+    LANDED, TAKE_OFF, IN_FLIGHT, LANDING
+};
 typedef enum flight_mode_state_e FlightModeState;
 
 /**
@@ -67,5 +67,4 @@ void flight_mode_advance_state(void);
  * Called by the kernel. Checks conditions and advances state.
  */
 //void flight_mode_update(KernelTask* t_task);
-
 #endif /* OPSTATUSFSM_H_ */

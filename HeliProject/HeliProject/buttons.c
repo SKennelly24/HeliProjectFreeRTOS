@@ -31,7 +31,6 @@
 #include "inc/tm4c123gh6pm.h"  // Board specific defines (for PF0)
 #include "buttons.h"
 
-
 // *******************************************************
 // Globals to module
 // *******************************************************
@@ -43,51 +42,48 @@ static bool but_normal[NUM_BUTS];   // Corresponds to the electrical state
 // *******************************************************
 // initButtons: Initialise the variables associated with the set of buttons
 // defined by the constants in the buttons2.h header file.
-void
-initButtons (void)
+void initButtons(void)
 {
     int i;
 
     // UP button (active HIGH)
-    SysCtlPeripheralEnable (UP_BUT_PERIPH);
-    GPIOPinTypeGPIOInput (UP_BUT_PORT_BASE, UP_BUT_PIN);
-    GPIOPadConfigSet (UP_BUT_PORT_BASE, UP_BUT_PIN, GPIO_STRENGTH_2MA,
-       GPIO_PIN_TYPE_STD_WPD);
+    SysCtlPeripheralEnable(UP_BUT_PERIPH);
+    GPIOPinTypeGPIOInput(UP_BUT_PORT_BASE, UP_BUT_PIN);
+    GPIOPadConfigSet(UP_BUT_PORT_BASE, UP_BUT_PIN, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPD);
     but_normal[UP] = UP_BUT_NORMAL;
 
     // DOWN button (active HIGH)
-    SysCtlPeripheralEnable (DOWN_BUT_PERIPH);
-    GPIOPinTypeGPIOInput (DOWN_BUT_PORT_BASE, DOWN_BUT_PIN);
-    GPIOPadConfigSet (DOWN_BUT_PORT_BASE, DOWN_BUT_PIN, GPIO_STRENGTH_2MA,
-       GPIO_PIN_TYPE_STD_WPD);
+    SysCtlPeripheralEnable(DOWN_BUT_PERIPH);
+    GPIOPinTypeGPIOInput(DOWN_BUT_PORT_BASE, DOWN_BUT_PIN);
+    GPIOPadConfigSet(DOWN_BUT_PORT_BASE, DOWN_BUT_PIN, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPD);
     but_normal[DOWN] = DOWN_BUT_NORMAL;
 
     // LEFT button (active LOW)
-    SysCtlPeripheralEnable (LEFT_BUT_PERIPH);
-    GPIOPinTypeGPIOInput (LEFT_BUT_PORT_BASE, LEFT_BUT_PIN);
-    GPIOPadConfigSet (LEFT_BUT_PORT_BASE, LEFT_BUT_PIN, GPIO_STRENGTH_2MA,
-       GPIO_PIN_TYPE_STD_WPU);
+    SysCtlPeripheralEnable(LEFT_BUT_PERIPH);
+    GPIOPinTypeGPIOInput(LEFT_BUT_PORT_BASE, LEFT_BUT_PIN);
+    GPIOPadConfigSet(LEFT_BUT_PORT_BASE, LEFT_BUT_PIN, GPIO_STRENGTH_2MA,
+    GPIO_PIN_TYPE_STD_WPU);
     but_normal[LEFT] = LEFT_BUT_NORMAL;
 
     // RIGHT button (active LOW)
-      // Note that PF0 is one of a handful of GPIO pins that need to be
-      // "unlocked" before they can be reconfigured.  This also requires
-      //      #include "inc/tm4c123gh6pm.h"
-    SysCtlPeripheralEnable (RIGHT_BUT_PERIPH);
+    // Note that PF0 is one of a handful of GPIO pins that need to be
+    // "unlocked" before they can be reconfigured.  This also requires
+    //      #include "inc/tm4c123gh6pm.h"
+    SysCtlPeripheralEnable(RIGHT_BUT_PERIPH);
     //---Unlock PF0 for the right button:
     GPIO_PORTF_LOCK_R = GPIO_LOCK_KEY;
     GPIO_PORTF_CR_R |= GPIO_PIN_0; //PF0 unlocked
     GPIO_PORTF_LOCK_R = GPIO_LOCK_M;
-    GPIOPinTypeGPIOInput (RIGHT_BUT_PORT_BASE, RIGHT_BUT_PIN);
-    GPIOPadConfigSet (RIGHT_BUT_PORT_BASE, RIGHT_BUT_PIN, GPIO_STRENGTH_2MA,
-       GPIO_PIN_TYPE_STD_WPU);
+    GPIOPinTypeGPIOInput(RIGHT_BUT_PORT_BASE, RIGHT_BUT_PIN);
+    GPIOPadConfigSet(RIGHT_BUT_PORT_BASE, RIGHT_BUT_PIN, GPIO_STRENGTH_2MA,
+    GPIO_PIN_TYPE_STD_WPU);
     but_normal[RIGHT] = RIGHT_BUT_NORMAL;
 
     //SW1 Switch (active HIGH)
-    SysCtlPeripheralEnable (SWITCH_1_PERIPH);
-    GPIOPinTypeGPIOInput (SWITCH_1_PORT_BASE, SWITCH_1_PIN);
-    GPIOPadConfigSet (SWITCH_1_PORT_BASE, SWITCH_1_PIN, GPIO_STRENGTH_2MA,
-       GPIO_PIN_TYPE_STD_WPD);
+    SysCtlPeripheralEnable(SWITCH_1_PERIPH);
+    GPIOPinTypeGPIOInput(SWITCH_1_PORT_BASE, SWITCH_1_PIN);
+    GPIOPadConfigSet(SWITCH_1_PORT_BASE, SWITCH_1_PIN, GPIO_STRENGTH_2MA,
+    GPIO_PIN_TYPE_STD_WPD);
     but_normal[SW1] = UP_BUT_NORMAL;
 
     for (i = 0; i < NUM_BUTS; i++)
@@ -107,19 +103,19 @@ initButtons (void)
 // A state change occurs only after NUM_BUT_POLLS consecutive polls have
 // read the pin in the opposite condition, before the state changes and
 // a flag is set.  Set NUM_BUT_POLLS according to the polling rate.
-void
-updateButtons (void)
+void updateButtons(void)
 {
     bool but_value[NUM_BUTS];
     int i;
 
     // Read the pins; true means HIGH, false means LOW
-    but_value[UP] = (GPIOPinRead (UP_BUT_PORT_BASE, UP_BUT_PIN) == UP_BUT_PIN);
-    but_value[DOWN] = (GPIOPinRead (DOWN_BUT_PORT_BASE, DOWN_BUT_PIN) == DOWN_BUT_PIN);
-    but_value[LEFT] = (GPIOPinRead (LEFT_BUT_PORT_BASE, LEFT_BUT_PIN) == LEFT_BUT_PIN);
-    but_value[RIGHT] = (GPIOPinRead (RIGHT_BUT_PORT_BASE, RIGHT_BUT_PIN) == RIGHT_BUT_PIN);
-    but_value[SW1] = (GPIOPinRead (SWITCH_1_PORT_BASE, SWITCH_1_PIN) == SWITCH_1_PIN);
+    but_value[UP] = (GPIOPinRead(UP_BUT_PORT_BASE, UP_BUT_PIN) == UP_BUT_PIN);
+    but_value[DOWN] = (GPIOPinRead(DOWN_BUT_PORT_BASE, DOWN_BUT_PIN) == DOWN_BUT_PIN);
+    but_value[LEFT] = (GPIOPinRead(LEFT_BUT_PORT_BASE, LEFT_BUT_PIN) == LEFT_BUT_PIN);
+    but_value[RIGHT] = (GPIOPinRead(RIGHT_BUT_PORT_BASE, RIGHT_BUT_PIN) == RIGHT_BUT_PIN);
+    but_value[SW1] = (GPIOPinRead(SWITCH_1_PORT_BASE, SWITCH_1_PIN) == SWITCH_1_PIN);
     // Iterate through the buttons, updating button variables as required
+
     for (i = 0; i < NUM_BUTS; i++)
     {
         if (but_value[i] != but_state[i])
@@ -137,12 +133,12 @@ updateButtons (void)
     }
 }
 
+
 // *******************************************************
 // checkButton: Function returns the new button logical state if the button
 // logical state (PUSHED or RELEASED) has changed since the last call,
 // otherwise returns NO_CHANGE.
-uint8_t
-checkButton (uint8_t butName)
+uint8_t checkButton(uint8_t butName)
 {
     if (but_flag[butName])
     {
