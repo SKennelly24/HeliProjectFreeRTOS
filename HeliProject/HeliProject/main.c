@@ -146,16 +146,13 @@ void QueueButtonPushes(void *pvParameters)
     while (1)
     {
         updateButtons();
+        CheckQueueButton(SW1);
         if (g_heliState == FLYING)
         {
             CheckQueueButton(UP);
             CheckQueueButton(DOWN);
             CheckQueueButton(LEFT);
             CheckQueueButton(RIGHT);
-        }
-        else
-        {
-            CheckQueueButton(SW1);
         }
         vTaskDelay(1 / (BUTTON_QUEUE_FREQ * portTICK_RATE_MS));
     }
