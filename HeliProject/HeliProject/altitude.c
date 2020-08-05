@@ -201,7 +201,7 @@ void alt_calibrate(int32_t alt_raw)
 }
 
 
-int16_t alt_update(void)
+void alt_update(void)
 {
     int32_t sum;
     uint16_t i;
@@ -219,11 +219,12 @@ int16_t alt_update(void)
     alt_raw = (2 * sum + ALT_BUF_SIZE) / (2 * ALT_BUF_SIZE);
 
     if (alt_has_been_calibrated()) {
-    } else if (g_conversions > ALT_BUF_SIZE) {
+    }
+    else if (g_conversions > ALT_BUF_SIZE) {
         alt_calibrate(alt_raw);
+        g_has_been_calibrated = true;
     }
     g_alt_percent = getAltitudePercent(alt_raw);
-    return g_alt_percent;
 }
 
 
@@ -240,6 +241,7 @@ bool alt_has_been_calibrated(void)
 void alt_reset_calibration_state(void)
 {
     g_has_been_calibrated = false;
+    g_conversions = 0;
 }
 
 

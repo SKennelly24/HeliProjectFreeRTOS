@@ -69,24 +69,24 @@
 #define CHECK_QUEUE_FREQ 10
 
 // Global constants .. bad but needed
-/**
- * The amount of time to display the splash screen (in seconds)
- */
-static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
-
-static QueueHandle_t g_buttonQueue;
-static SemaphoreHandle_t g_buttonMutex;
-static SemaphoreHandle_t g_changeStateMutex;
-
-static int32_t g_altitudeReference;
-static int32_t g_yawReference;
-static int8_t g_heliState;
-
 typedef enum HELI_STATE
 {
     LANDED = 0, TAKEOFF, FLYING, LANDING, HOVER
 } HELI_STATE;
 
+static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
+
+static QueueHandle_t g_buttonQueue;
+static SemaphoreHandle_t g_buttonMutex;
+
+static SemaphoreHandle_t g_changeStateMutex;
+static int8_t g_heliState = LANDED;
+
+static SemaphoreHandle_t g_altitudeMutex;
+static int32_t g_altitudeReference = 0;
+
+static SemaphoreHandle_t g_yawMutex;
+static int32_t g_yawReference = 0;
 
 
 /*
@@ -98,7 +98,7 @@ void GetAltitude(void *pvParameters)
     while (1)
     {
         alt_process_adc();
-        int32_t height = alt_update();
+        alt_update();
         vTaskDelay(1 / (ALITUDE_MEAS_FREQ * portTICK_RATE_MS)); //  Current frequency is
     }
     // No way to kill this task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
@@ -161,6 +161,29 @@ void QueueButtonPushes(void *pvParameters)
     }
 }
 
+/*
+ * Sets the altitude reference
+ */
+void setAltitudeReference(int32_t new_altitude)
+{
+    if (xSemaphoreTake(g_altitudeMutex, (TickType_t) 10) == true) //Take mutex
+    {
+        g_altitudeReference = new_altitude;
+        xSemaphoreGive(g_altitudeMutex); //give mutex
+    }
+}
+
+/*
+ * Sets the yaw reference
+ */
+void setYawReference(int32_t new_yaw)
+{
+    if (xSemaphoreTake(g_yawMutex, (TickType_t) 10) == true) //Take mutex
+    {
+        g_yawReference = new_yaw;
+        xSemaphoreGive(g_yawMutex); //give mutex
+    }
+}
 
 /*
  * Updates the altitude and yaw references given the button press
@@ -172,42 +195,43 @@ void UpdateReferences(int8_t pressed_button)
     case UP:
         if (g_altitudeReference < (MAX_HEIGHT - 10))
         { //If not within 10% of max altitude
-            g_altitudeReference = g_altitudeReference + 10;
+
+            setAltitudeReference(g_altitudeReference + 10);
         }
         else
         {
-            g_altitudeReference = MAX_HEIGHT;
+            setAltitudeReference(MAX_HEIGHT);
         }
         break;
     case DOWN:
         // Checks lower limits of altitude if down button is pressed
         if (g_altitudeReference > 10)
         {
-            g_altitudeReference = g_altitudeReference - 10;
+            setAltitudeReference(g_altitudeReference - 10);
         }
         else
         {
-            g_altitudeReference = 0;
+            setAltitudeReference(0);
         }
         break;
     case RIGHT:
         if (g_yawReference <= 164)
         {
-            g_yawReference = g_yawReference + 15;
+            setYawReference(g_yawReference + 15);
         }
         else
         {
-            g_yawReference = -345 + g_yawReference;
+            setYawReference(-345 + g_yawReference);
         }
         break;
     case LEFT:
         if (g_yawReference >= -165)
         {
-            g_yawReference = g_yawReference - 15;
+            setYawReference(g_yawReference - 15);
         }
         else
         {
-            g_yawReference = 345 + g_yawReference;
+            setYawReference(345 + g_yawReference);
         }
         break;
     }
@@ -251,6 +275,7 @@ void changeState(int8_t state_num)
 }
 
 
+
 /* Given the pressed button from the queue
  * changes the state if the switch was pressed
  * otherwise updates the altitude and yaw references
@@ -261,10 +286,12 @@ void ButtonUpdates(int8_t pressed_button)
     {
         switch (g_heliState)
         {
-        case FLYING:
-            changeState(LANDING);
-        case LANDED:
-            changeState(TAKEOFF);
+            case FLYING:
+                changeState(LANDING);
+                break;
+            case LANDED:
+                changeState(TAKEOFF);
+                break;
         }
     }
     else
@@ -306,71 +333,47 @@ void CheckButtonQueue(void *pvParameters)
  */
 void initFSM(void)
 {
-    g_heliState = FLYING;
-    g_altitudeReference = 10;
-    g_yawReference = 10;
     g_changeStateMutex = xSemaphoreCreateMutex();
+    g_altitudeMutex = xSemaphoreCreateMutex();
+    g_yawMutex = xSemaphoreCreateMutex();
 }
 
 void flight_mode_FSM(void *pvParameters)
 {
     // If state is TAKEOFF, find yaw reference, advance state,
-    if (g_heliState == TAKEOFF)
+    switch(g_heliState)
     {
+    case(TAKEOFF):
         if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
         {
-            // if we are in TAKE_OFF mode and both the yaw and altitude have been calibrated,
-            // then we advance to FLYING mode and change PID control?
-
+            setAltitudeReference(10);
+        } else if (alt_get() == 10) {
             changeState(FLYING);
-            //UpdateReferences(pressed_button);
-            //Once control is implemented, can insert control functions that change yaw and altitude
-
+        } else {
+            //Set the tail rotor to move so it can find the yaw reference
         }
-        else
-        {
-            // if we are in TAKE_OFF mode and both of the yaw and altitude have not been calibrated,
-            // then we turn off the main rotor and turn on the tail rotor
-            pwm_set_main_duty(0);
-            pwm_set_tail_duty(0);
-
-            // the yaw reference will be calibrated via an interrupt
+        break;
+    case(LANDING):
+        if (alt_get() == 0 && yawInDegrees() == 0) {
+            changeState(LANDED);
+        } else {
+            setAltitudeReference(0);
+            setYawReference(0);
         }
-    }
-
-    // If state is LANDING, set yaw to zero, altitude to HOVER_ALTITUDE,
-    //  once settled set altitude to zero.
-    // Once settled at zero altitude, deactivate PID controls, reset
-    //  calibration, set yaw and altitude setpoints to zero, advance state
-
-    if (g_heliState == LANDING)
-    {
-        //Turn off controllers
-
-        //reset yaw and altitude calibration
+        break;
+    case(FLYING):
+        //Turn on motors and do shit
+        break;
+    case(HOVER):
+        //Will setup new mode 07/08/2020
+        break;
+    case(LANDED):
         alt_reset_calibration_state();
         yaw_reset_calibration_state();
-
-        //set yaw and altitude to zero
-        alt_calibrate(0);
-        yaw_calibrate(0);
-
-        changeState(LANDED);
-    }
-    else
-    {
-        if (alt_get() != 0)
-        {
-            alt_calibrate(0);
-        }
+        //Turn off the motors?
+        break;
     }
 
-
-    if(g_heliState == HOVER)
-    {
-        //Will setup new mode 07/08/2020
-
-    }
 }
 
 

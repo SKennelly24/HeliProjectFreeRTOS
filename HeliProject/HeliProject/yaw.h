@@ -24,9 +24,6 @@
  *
  * ***************************************************************/
 
-// ************************ GLOBALS *******************************
-// ********************** PROTOTYPES *****************************
-// ****************************************************************
 // Initialises Yaw
 // associated with the Quadrature decoding function
 void initYaw(void);
@@ -44,5 +41,16 @@ void QDIntHandler(void);
 // yawInDegrees: Converts between Raw Yaw to Yaw in degrees
 int yawInDegrees(void);
 // @return  Current heli yaw in +/- degrees from reference point
+
+/*
+ * Returns true if the yaw has been calibrated and false otherwise
+ */
+bool yaw_has_been_calibrated(void);
+
+/*
+ * Resets yaw calibration state,
+ * the tail rotor should then be turned on to find the reference again
+ */
+void yaw_reset_calibration_state(void);
 
 #endif /*QUAD_DECODE_H*/

@@ -28,7 +28,12 @@
 //*****************************************************************************
 enum butNames
 {
-    UP = 0, DOWN, LEFT, RIGHT, SW1, NUM_BUTS
+    UP = 0,
+    DOWN,
+    LEFT,
+    RIGHT,
+    SW1,
+    NUM_BUTS,
 };
 
 enum butStates

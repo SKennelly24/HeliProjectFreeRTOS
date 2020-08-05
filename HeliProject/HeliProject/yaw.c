@@ -68,6 +68,7 @@ void referenceInterrupt(void)
 {
     YAW = 0;
     GPIOIntClear(YAW_REFERENCE_BASE, YAW_REFERENCE_PIN);
+    g_has_been_calibrated = true;
 }
 
 
@@ -113,6 +114,7 @@ void initQuadratureGPIO(void)
 
 }
 
+//No idea what this is trying to do
 void yaw_calibrate(int32_t yaw_raw)
 {
     YAW = yaw_raw;
