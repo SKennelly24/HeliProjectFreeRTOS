@@ -57,6 +57,7 @@
 int A_B = NULL;
 int YAW = 0;
 int32_t g_referenceYaw;
+static bool g_has_been_calibrated = false;
 
 
 // ********************** QUADRATURE DECODING FUNCTIONS **********************
@@ -109,6 +110,13 @@ void initQuadratureGPIO(void)
     // set initial quadrature conditions
     YAW = GPIOPinRead(YAW_GPIO_BASE,
     YAW_PIN0_GPIO_PIN | YAW_PIN1_GPIO_PIN);
+
+}
+
+void yaw_calibrate(int32_t yaw_raw)
+{
+    YAW = yaw_raw;
+    g_has_been_calibrated = true;
 }
 
 
@@ -217,6 +225,16 @@ int yawInDegrees(void)
     }
 
     return yawDeg;
+}
+
+bool yaw_has_been_calibrated(void)
+{
+    return g_has_been_calibrated;
+}
+
+void yaw_reset_calibration_state(void)
+{
+    g_has_been_calibrated = false;
 }
 
 // ****************************************************************************

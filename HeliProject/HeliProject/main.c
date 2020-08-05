@@ -84,7 +84,7 @@ static int8_t g_heliState;
 
 typedef enum HELI_STATE
 {
-    LANDED = 0, TAKEOFF, FLYING, LANDING,
+    LANDED = 0, TAKEOFF, FLYING, LANDING, HOVER
 } HELI_STATE;
 
 
@@ -312,18 +312,20 @@ void initFSM(void)
     g_changeStateMutex = xSemaphoreCreateMutex();
 }
 
-void flight_mode_update(void *pvParameters)
+void flight_mode_FSM(void *pvParameters)
 {
     // If state is TAKEOFF, find yaw reference, advance state,
     if (g_heliState == TAKEOFF)
     {
-        if (1) //Check if this is the right conditionals g_referenceYaw = -1 && YAW != 0
+        if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
         {
             // if we are in TAKE_OFF mode and both the yaw and altitude have been calibrated,
-            // then we advance to FLYING mode
+            // then we advance to FLYING mode and change PID control?
 
             changeState(FLYING);
             //UpdateReferences(pressed_button);
+            //Once control is implemented, can insert control functions that change yaw and altitude
+
         }
         else
         {
@@ -335,68 +337,42 @@ void flight_mode_update(void *pvParameters)
             // the yaw reference will be calibrated via an interrupt
         }
     }
-}
 
     // If state is LANDING, set yaw to zero, altitude to HOVER_ALTITUDE,
     //  once settled set altitude to zero.
     // Once settled at zero altitude, deactivate PID controls, reset
     //  calibration, set yaw and altitude setpoints to zero, advance state
 
-/*
-     if (g_mode == LANDING)
+    if (g_heliState == LANDING)
     {
-        // Is current yaw within tolerance?
-        if (yaw_is_settled_around(0))
+        //Turn off controllers
+
+        //reset yaw and altitude calibration
+        alt_reset_calibration_state();
+        yaw_reset_calibration_state();
+
+        //set yaw and altitude to zero
+        alt_calibrate(0);
+        yaw_calibrate(0);
+
+        changeState(LANDED);
+    }
+    else
+    {
+        if (alt_get() != 0)
         {
-            if (alt_is_settled_around(0))
-            {
-
-                // if the angle is +/- 3 degrees of zero and our altitude is zero or lower,
-                // then we reset the entire helicopter state and put it back in LANDED mode
-
-                control_enable_yaw(false);
-                control_enable_altitude(false);
-
-                yaw_reset_calibration_state();
-                alt_reset_calibration_state();
-
-                setpoint_set_yaw(0);
-                setpoint_set_altitude(0);
-
-                flight_mode_advance_state();
-            }
-            else
-            {
-                // Is yaw and altitude settled for HOVER_ALTITUDE?
-                if (alt_is_settled_around(HOVER_ALTITUDE)
-                        && yaw_is_settled_around(0))
-                {
-                    // if the angle is +/- 3 degrees of zero and our altitude is around 5%,
-                    // then we set the desired altitude to 0%
-                    setpoint_set_altitude(0);
-                }
-                else
-                {
-                    if (setpoint_get_altitude() != 0)
-                    {
-                        // if the angle is +/- 3 degrees of zero and our altitude is not around 0% and
-                        // our desired altitude has not been set to 0%,
-                        // then we set our desired altitude to be 5%
-                        setpoint_set_altitude (HOVER_ALTITUDE);
-                    }
-                }
-            }
-        }
-        // NO, get to zero yaw
-        else
-        {
-            // if the angle is not +/- 3 degrees of zero
-            // then we set our desired angle to be 0 degrees
-            setpoint_set_yaw(0);
+            alt_calibrate(0);
         }
     }
+
+
+    if(g_heliState == HOVER)
+    {
+        //Will setup new mode 07/08/2020
+
+    }
 }
-*/
+
 
 /*
  * Initialises clock, interrupts
