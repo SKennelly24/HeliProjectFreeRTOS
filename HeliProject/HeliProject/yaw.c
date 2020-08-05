@@ -8,10 +8,6 @@
  *  - Sarah Kennelly
  *  - Manu Hamblyn
  *
- *  This code does not make sense, you do not register or deal with the reference yaw
- *  what so ever, you also initialise the interrupts in an unusual way and dealing,
- *  with the reference in the main function will not work - last year you polled this
- *  which will not work this year, entire file needs to be redone
  *
 * ****************************************************************
  * QUAD_DECODE.c
@@ -32,8 +28,22 @@
 #define YAW_REFERENCE_BASE GPIO_PORTC_BASE
 #define YAW_REFERENCE_PIN GPIO_INT_PIN_4
 
+#define STATE_A             0                       // A = 0, B = 0
+#define STATE_B             1                       // A = 1, B = 0
+#define STATE_C             -1                      // A = 1, B = 2
+#define STATE_D             -2                      // A = 0, B = 2
 
-#include <defines.h>
+#define MAX_YAW             448                     // Number of slots in yaw disc * 4 - Equates to one full rotation CW
+#define MIN_YAW             -448                    // Number of slots in yaw disc * 4 - Equates to one full rotation CCW
+
+#define PHASE_AB_PERIPH     SYSCTL_PERIPH_GPIOB     // Peripheral For Both Phases
+#define PHASE_AB_PORT_BASE  GPIO_PORTB_BASE         // Port Base For Both Phases
+#define PHASE_A_PIN         GPIO_PIN_0              // Phase A Pin
+#define PHASE_B_PIN         GPIO_PIN_1              // Phase B Pin
+#define PHASE_A_INT_PIN     GPIO_INT_PIN_0          // Interrupt On Phase A Pin
+#define PHASE_B_INT_PIN     GPIO_INT_PIN_1          // Interrupt On Phase B Pin
+
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <yaw.h>
@@ -51,9 +61,9 @@ int YAW = 0;
 int32_t g_referenceYaw;
 
 // ********************** QUADRATURE DECODING FUNCTIONS **********************
-//********************************************************
+//
 // Interrupt for to check if the helicopter has found the zero yaw reference
-//********************************************************
+//
 void referenceInterrupt(void)
 {
     YAW = 0;

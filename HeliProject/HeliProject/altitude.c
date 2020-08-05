@@ -188,6 +188,11 @@ int32_t getAltitudePercent(int32_t sample_mean_adc)
     }
 }
 
+void alt_calibrate(int32_t alt_raw)
+{
+    g_alt_ref = alt_raw;
+    g_has_been_calibrated = true;
+}
 
 int16_t alt_update(void)
 {
@@ -214,13 +219,6 @@ int16_t alt_update(void)
     return g_alt_percent;
 }
 
-
-void alt_calibrate(int32_t alt_raw)
-{
-    g_alt_ref = alt_raw;
-    g_has_been_calibrated = true;
-}
-
 int16_t alt_get(void)
 {
     return g_alt_percent;
@@ -230,7 +228,6 @@ bool alt_has_been_calibrated(void)
 {
     return g_has_been_calibrated;
 }
-
 
 void alt_reset_calibration_state(void)
 {

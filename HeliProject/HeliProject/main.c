@@ -14,6 +14,7 @@
  *
  * based on Simple LED blinking example for the Tiva Launchpad
  */
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -91,7 +92,7 @@ typedef enum HELI_STATE
 
 
 /*
- * Initiates the alitude measurement,
+ * Initiates the altitude measurement,
  * Gets the current height
  */
 void GetAltitude(void *pvParameters)
@@ -116,7 +117,7 @@ void initButtonQueue(void)
 
 /*
  * Check the button state if it has been pushed then
- * queue it if it has been or in the case of the switch released aswell
+ * Queue it if it has been or in the case of the switch released aswell
  */
 void CheckQueueButton(uint8_t button)
 {
@@ -149,7 +150,6 @@ void QueueButtonPushes(void *pvParameters)
         } else {
             CheckQueueButton(SW1);
         }
-
         vTaskDelay(1 / (BUTTON_QUEUE_FREQ * portTICK_RATE_MS));
     }
 }
@@ -241,12 +241,10 @@ void CheckButtonQueue(void *pvParameters)
             {
                 xQueueReceive(g_buttonQueue, &pressed_button, (TickType_t) 0);
                 UpdateReferences(pressed_button);
-
             }
             xSemaphoreGive(g_buttonMutex); //Gives it back
         }
         vTaskDelay(1 / (CHECK_QUEUE_FREQ * portTICK_RATE_MS));
-
     }
 }
 
@@ -274,7 +272,7 @@ void initialise(void)
     SysCtlClockSet (SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
                     SYSCTL_XTAL_16MHZ);
 
-    //Initialisation ot things for tasks
+    //Initialisation to things for tasks
     alt_init();     // Altitude and ADC
     disp_init();    // Display
     uart_init();    // UART
@@ -304,7 +302,6 @@ void createTasks(void)
     if (pdTRUE != xTaskCreate(uart_update, "UART send", 512, NULL, 4, NULL)) {
        while(1);   // Oh no! Must not have had enough memory to create the task.
     }
-
 
     if (pdTRUE != xTaskCreate(QueueButtonPushes, "Queue Button Pushes", 32, NULL, 4, NULL)) {
        while(1);   // Oh no! Must not have had enough memory to create the task.

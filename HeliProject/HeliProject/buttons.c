@@ -54,18 +54,21 @@ initButtons (void)
     GPIOPadConfigSet (UP_BUT_PORT_BASE, UP_BUT_PIN, GPIO_STRENGTH_2MA,
        GPIO_PIN_TYPE_STD_WPD);
     but_normal[UP] = UP_BUT_NORMAL;
+
     // DOWN button (active HIGH)
     SysCtlPeripheralEnable (DOWN_BUT_PERIPH);
     GPIOPinTypeGPIOInput (DOWN_BUT_PORT_BASE, DOWN_BUT_PIN);
     GPIOPadConfigSet (DOWN_BUT_PORT_BASE, DOWN_BUT_PIN, GPIO_STRENGTH_2MA,
        GPIO_PIN_TYPE_STD_WPD);
     but_normal[DOWN] = DOWN_BUT_NORMAL;
+
     // LEFT button (active LOW)
     SysCtlPeripheralEnable (LEFT_BUT_PERIPH);
     GPIOPinTypeGPIOInput (LEFT_BUT_PORT_BASE, LEFT_BUT_PIN);
     GPIOPadConfigSet (LEFT_BUT_PORT_BASE, LEFT_BUT_PIN, GPIO_STRENGTH_2MA,
        GPIO_PIN_TYPE_STD_WPU);
     but_normal[LEFT] = LEFT_BUT_NORMAL;
+
     // RIGHT button (active LOW)
       // Note that PF0 is one of a handful of GPIO pins that need to be
       // "unlocked" before they can be reconfigured.  This also requires
