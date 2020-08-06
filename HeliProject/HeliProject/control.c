@@ -41,8 +41,8 @@
 * The yaw gains.
 */
 #define YAW_KP 0.8f;
-#define YAW_KI 0.009f;
-#define YAW_KD 0.8f;
+#define YAW_KI 0.0095f;
+#define YAW_KD 0.75f;
 
 int16_t volatile YAW_TARGET = 0;    // Degrees
 uint8_t volatile ALT_TARGET = 0;    // Percent
@@ -68,6 +68,8 @@ bool volatile PID_ACTIVE = false;   // A hack to turn the PID On/Off as needed.
 // Idle main duty, allows for faster take off, reducing dependence on integral error (duty cycle %).
 static const uint8_t IDLE_MAIN_DUTY = 25;
 
+static const uint8_t FIND_YAW_REF_MAIN_DUTY = 30;
+
 // Min speed of main rotor, allows for proper anti-clockwise yaw control and clamps descent speed (duty cycle %)
 static const uint8_t MIN_MAIN_DUTY = 20;
 // Max speed of main motor to stay within spec (duty cycle %)
@@ -75,7 +77,7 @@ static const uint8_t MAX_MAIN_DUTY = 70;
 
 // Min speed of tail rotor, prevents wear on motor by idling it instead of completely powering off during large C-CW movements (duty cycle %)
 // also reduces the time taken to spool up motor during sudden large C-CW->CW movements.
-static const uint8_t MIN_TAIL_DUTY = 1;
+static const uint8_t MIN_TAIL_DUTY = 3;
 // Max speed of tail motor to stay within spec (duty cycle %)
 static const uint8_t MAX_TAIL_DUTY = 70;
 
@@ -208,10 +210,6 @@ void control_update_yaw(void *pvParameters)
     float Igain = 0;
     float Dgain = 0;
 
-    float kp = 0;
-    float ki = 0;
-    float kd = 0;
-
     int16_t cumulative = 0;
     int16_t error = 0;
     int16_t lastError = 0;
@@ -231,7 +229,7 @@ void control_update_yaw(void *pvParameters)
             Pgain = clamp(Pgain, -TAIL_GAIN_CLAMP, TAIL_GAIN_CLAMP);
 
             // I control, only accumulate error if we are not motor duty limited (limits overshoot)
-            if (duty > MIN_TAIL_DUTY && duty < MAX_TAIL_DUTY)
+            if (duty >= MIN_TAIL_DUTY && duty < MAX_TAIL_DUTY) //change from > to >=
             {
                 cumulative += clamp(error, -INTEGRAL_TAIL_CLAMP, INTEGRAL_TAIL_CLAMP);; // Clamp integral growth for large errors
             }

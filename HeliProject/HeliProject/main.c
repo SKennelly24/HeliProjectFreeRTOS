@@ -351,18 +351,20 @@ void flight_mode_FSM(void *pvParameters)
             if (alt_get() >= 10)
             {
                 changeState(FLYING);
+                setYawReference(0);
             }
             else if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
             {
                 set_PID_ON();               //
                 setAltitudeReference(10);   //
+                setYawReference(0);
             }
             else
             {
-                //Set the main rotor to move so it can find the yaw reference
-                //Suggest pwm_main = 25% and tail = 1%
-                pwm_set_main_duty(25);
-                pwm_set_tail_duty(1);
+                //Set the rotors to move so it can find the yaw reference
+                //Suggest pwm_main = % and tail = %
+                pwm_set_main_duty(3);
+                pwm_set_tail_duty(25);
             }
             break;
         case (LANDING):
