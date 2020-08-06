@@ -213,7 +213,7 @@ void control_update_yaw(void *pvParameters)
         error = (YAW_TARGET - yawInDegrees());    // Update our target
 
         // P control with +- 10% clamp
-        Pgain = error*kp;
+        Pgain = error * YAW_KP;
         Pgain = clamp(Pgain, -TAIL_GAIN_CLAMP, TAIL_GAIN_CLAMP);
 
         // I control, only accumulate error if we are not motor duty limited (limits overshoot)
@@ -221,10 +221,10 @@ void control_update_yaw(void *pvParameters)
         {
             cumulative += clamp(error, -INTEGRAL_TAIL_CLAMP, INTEGRAL_TAIL_CLAMP);; // Clamp integral growth for large errors
         }
-        Igain = cumulative*ki;
+        Igain = cumulative * YAW_KI;
 
         // D control with +- 10% clamp
-        Dgain = (error - lastError)*kd; // Control is called with fixed frequency so time delta can be ignored.
+        Dgain = (error - lastError) * YAW_KD; // Control is called with fixed frequency so time delta can be ignored.
         lastError = error;
         Dgain = clamp(Dgain, -TAIL_GAIN_CLAMP, TAIL_GAIN_CLAMP);
 
