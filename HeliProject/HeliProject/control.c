@@ -44,9 +44,9 @@
 #define YAW_KI 0.009f;
 #define YAW_KD 0.8f;
 
-
-int16_t volatile YAW_TARGET = 0; // Degrees
-uint8_t volatile ALT_TARGET = 0; // Percent
+int16_t volatile YAW_TARGET = 0;    // Degrees
+uint8_t volatile ALT_TARGET = 0;    // Percent
+bool volatile PID_ACTIVE = false;   // A hack to turn the PID On/Off as needed.
 
 //struct control_state_s
 //{
@@ -126,6 +126,17 @@ void set_yaw_target(int16_t new_yaw_target)
     YAW_TARGET = new_yaw_target;
 }
 
+void set_PID_ON(void)
+{
+    PID_ACTIVE = true;
+}
+
+void set_PID_OFF(void)
+{
+    PID_ACTIVE = false;
+}
+
+
 void control_update_altitude(void *pvParameters)
 {
     // temp variables used to calculate new gain and direction
@@ -150,38 +161,39 @@ void control_update_altitude(void *pvParameters)
     }
 */
 
+    if (PID_ACTIVE)
+    {
+        // the difference between what we want and what we have (as a percentage)
+        error = ALT_TARGET - (int16_t)alt_get();
 
-    // the difference between what we want and what we have (as a percentage)
-    error = ALT_TARGET - (int16_t)alt_get();
+        // P control, *kp;
+        Pgain = error * ALT_KP;
+        Pgain = clamp(Pgain, -MAIN_GAIN_CLAMP, MAIN_GAIN_CLAMP);
 
-    // P control, *kp;
-    Pgain = error * ALT_KP;
-    Pgain = clamp(Pgain, -MAIN_GAIN_CLAMP, MAIN_GAIN_CLAMP);
+        // I control
+        // only accumulate error if we are not motor duty limited (limits overshoot)
+        if (duty > MIN_MAIN_DUTY && duty < MAX_MAIN_DUTY) {
+            cumulative += clamp(error, -INTEGRAL_MAIN_CLAMP, INTEGRAL_MAIN_CLAMP);; // Clamp integral growth for large errors
+        }
+        Igain = cumulative * ALT_KI;
 
-    // I control
-    // only accumulate error if we are not motor duty limited (limits overshoot)
-    if (duty > MIN_MAIN_DUTY && duty < MAX_MAIN_DUTY) {
-        cumulative += clamp(error, -INTEGRAL_MAIN_CLAMP, INTEGRAL_MAIN_CLAMP);; // Clamp integral growth for large errors
+        // D control, clamped to 10%
+        Dgain = (error - lastError) * ALT_KD;
+        lastError = error;
+        Dgain = clamp(Dgain, -MAIN_GAIN_CLAMP, MAIN_GAIN_CLAMP);
+
+        // Calculate new motor duty percentage gain
+        new_Duty = IDLE_MAIN_DUTY + Pgain + Igain + Dgain;
+
+        // clamp motor to be within spec
+        new_Duty = clamp(new_Duty, MIN_MAIN_DUTY, MAX_MAIN_DUTY);
+
+        // update the duty
+        duty = new_Duty;
+
+        // set the motor duty
+        pwm_set_main_duty(duty);
     }
-    Igain = cumulative * ALT_KI;
-
-    // D control, clamped to 10%
-    Dgain = (error - lastError) * ALT_KD;
-    lastError = error;
-    Dgain = clamp(Dgain, -MAIN_GAIN_CLAMP, MAIN_GAIN_CLAMP);
-
-    // Calculate new motor duty percentage gain
-    new_Duty = IDLE_MAIN_DUTY + Pgain + Igain + Dgain;
-
-    // clamp motor to be within spec
-    new_Duty = clamp(new_Duty, MIN_MAIN_DUTY, MAX_MAIN_DUTY);
-
-    // update the duty
-    duty = new_Duty;
-
-    // set the motor duty
-    pwm_set_main_duty(duty);
-
     vTaskDelay(1 / (CONTROL_RUN_FREQ * portTICK_RATE_MS));
     //Not the right approach but using to get started
     }
@@ -209,38 +221,40 @@ void control_update_yaw(void *pvParameters)
     while(1)
     {
 
-        // the difference between what we want and what we have (in degrees)
-        error = (YAW_TARGET - yawInDegrees());    // Update our target
+        if (PID_ACTIVE)
+            {
+            // the difference between what we want and what we have (in degrees)
+            error = (YAW_TARGET - yawInDegrees());    // Update our target
 
-        // P control with +- 10% clamp
-        Pgain = error * YAW_KP;
-        Pgain = clamp(Pgain, -TAIL_GAIN_CLAMP, TAIL_GAIN_CLAMP);
+            // P control with +- 10% clamp
+            Pgain = error * YAW_KP;
+            Pgain = clamp(Pgain, -TAIL_GAIN_CLAMP, TAIL_GAIN_CLAMP);
 
-        // I control, only accumulate error if we are not motor duty limited (limits overshoot)
-        if (duty > MIN_TAIL_DUTY && duty < MAX_TAIL_DUTY)
-        {
-            cumulative += clamp(error, -INTEGRAL_TAIL_CLAMP, INTEGRAL_TAIL_CLAMP);; // Clamp integral growth for large errors
-        }
-        Igain = cumulative * YAW_KI;
+            // I control, only accumulate error if we are not motor duty limited (limits overshoot)
+            if (duty > MIN_TAIL_DUTY && duty < MAX_TAIL_DUTY)
+            {
+                cumulative += clamp(error, -INTEGRAL_TAIL_CLAMP, INTEGRAL_TAIL_CLAMP);; // Clamp integral growth for large errors
+            }
+            Igain = cumulative * YAW_KI;
 
-        // D control with +- 10% clamp
-        Dgain = (error - lastError) * YAW_KD; // Control is called with fixed frequency so time delta can be ignored.
-        lastError = error;
-        Dgain = clamp(Dgain, -TAIL_GAIN_CLAMP, TAIL_GAIN_CLAMP);
+            // D control with +- 10% clamp
+            Dgain = (error - lastError) * YAW_KD; // Control is called with fixed frequency so time delta can be ignored.
+            lastError = error;
+            Dgain = clamp(Dgain, -TAIL_GAIN_CLAMP, TAIL_GAIN_CLAMP);
 
-        // Calculate new motor duty percentage gain
-        new_Duty = Pgain + Igain + Dgain;
+            // Calculate new motor duty percentage gain
+            new_Duty = Pgain + Igain + Dgain;
 
-        // clamp motor to be within spec
-        new_Duty = clamp(new_Duty, MIN_TAIL_DUTY, MAX_TAIL_DUTY);
+            // clamp motor to be within spec
+            new_Duty = clamp(new_Duty, MIN_TAIL_DUTY, MAX_TAIL_DUTY);
 
-        // update the duty
-        duty = new_Duty;
+            // update the duty
+            duty = new_Duty;
 
-        // set the motor duty
-        pwm_set_tail_duty(duty);
+            // set the motor duty
+            pwm_set_tail_duty(duty);
 
-        //new_yaw_target = yaw_target;
+            }
 
         vTaskDelay(1 / (CONTROL_RUN_FREQ * portTICK_RATE_MS));
         //Not the right approach but using to get started

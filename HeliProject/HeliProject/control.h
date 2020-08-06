@@ -73,4 +73,8 @@ void set_altitude_target(uint8_t new_alt_target);
 
 void set_yaw_target(int16_t new_yaw_target);
 
+void set_PID_ON(void);
+
+void set_PID_OFF(void);
+
 #endif
