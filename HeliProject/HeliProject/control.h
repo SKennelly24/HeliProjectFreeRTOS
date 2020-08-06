@@ -26,8 +26,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-//#include "kernel.h"
-
 struct control_gains_s
 {
   float kp;
@@ -69,7 +67,7 @@ void control_enable_yaw(bool t_enabled);
 
 void control_update_yaw(void *pvParameters);
 
-void set_altitide_target(uint8_t new_alt_target);
+void set_altitude_target(uint8_t new_alt_target);
 
 void set_yaw_target(int16_t new_yaw_target);
 

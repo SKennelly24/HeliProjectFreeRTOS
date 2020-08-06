@@ -171,7 +171,7 @@ void setAltitudeReference(int32_t new_altitude)
         xSemaphoreGive(g_altitudeMutex); //give mutex
     }
     //Set control -> altitude reference
-    //set_altitude_target( (uint8_t) g_altitudeReference)
+    set_altitude_target( (uint8_t) g_altitudeReference);
 }
 
 /*
@@ -183,7 +183,7 @@ void setYawReference(int32_t new_yaw)
     {
         g_yawReference = new_yaw;
         xSemaphoreGive(g_yawMutex); //give mutex
-        //set_yaw_target( (int16_t) g_yawReference)
+        set_yaw_target( (int16_t) g_yawReference);
     }
 }
 

@@ -24,6 +24,7 @@
 #include "flight_mode.h"
 #include "utils.h"
 
+
 // RTOS
 #include "FreeRTOS.h"
 #include "task.h"
@@ -32,8 +33,8 @@
 
 #define CONTROL_RUN_FREQ 30 // run PID control 30 times a second
 
-int16_t YAW_TARGET = 0; // Degrees
-uint8_t ALT_TARGET = 0; // Percent
+int16_t volatile YAW_TARGET = 0; // Degrees
+uint8_t volatile ALT_TARGET = 0; // Percent
 
 //struct control_state_s
 //{
@@ -102,6 +103,16 @@ void control_init(ControlGains t_altitude_gains, ControlGains t_yaw_gains)
     g_control_yaw = control_get_state_from_gains(t_yaw_gains);
 }
 */
+
+void set_altitude_target(uint8_t new_alt_target)
+{
+    ALT_TARGET = new_alt_target;
+}
+
+void set_yaw_target(int16_t new_yaw_target)
+{
+    YAW_TARGET = new_yaw_target;
+}
 
 void control_update_altitude(void *pvParameters)
 {
