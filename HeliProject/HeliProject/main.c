@@ -350,21 +350,27 @@ void flight_mode_FSM(void *pvParameters)
         case (TAKEOFF):
             if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
             {
-                setAltitudeReference(10);
+                set_PID_ON();               //
+                setAltitudeReference(10);   //
             }
-            else if (alt_get() == 10)
+            else if (alt_get() == 10)       //FLYING, once target altitude reached
             {
                 changeState(FLYING);
+
             }
             else
             {
-                //Set the tail rotor to move so it can find the yaw reference
+                //Set the main rotor to move so it can find the yaw reference
+                //Suggest pwm_main = 25% and tail = 1%
+                pwm_set_main_duty(25);
+                pwm_set_tail_duty(1);
             }
             break;
         case (LANDING):
             if (alt_get() == 0 && yawInDegrees() == 0)
             {
                 changeState(LANDED);
+                //
             }
             else
             {
@@ -374,6 +380,7 @@ void flight_mode_FSM(void *pvParameters)
             break;
         case (FLYING):
             //Turn on motors and do shit
+            //flight controls active!
             break;
         case(HOVER):
             //Will setup new mode 07/08/2020
@@ -383,6 +390,11 @@ void flight_mode_FSM(void *pvParameters)
             alt_reset_calibration_state();
             yaw_reset_calibration_state();
             //Turn off the motors?
+            //set the pwm_main and pwm_tail duty to zero
+            //set the pwm_main and pwm_tail duty to zero
+            set_PID_OFF();
+            pwm_set_main_duty(0);
+            pwm_set_tail_duty(0);
             break;
 
             vTaskDelay(1 / (FSM_FREQ * portTICK_RATE_MS));

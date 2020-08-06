@@ -2,6 +2,12 @@
  *
  * control.h
  *
+ * ENCE464-20S2 Group 18 RTOS Heli project
+ * Derrick Edward
+ * Sarah Kennelley
+ * Manu Hamblyn
+ *
+ * ----------------------------------------------------------------------------
  * ENEL361 Helicopter Project
  * Friday Morning, Group 7
  *
@@ -9,8 +15,6 @@
  *  - Manu Hamblyn  <mfb31<@uclive.ac.nz>   95140875
  *  - Will Cowper   <wgc22@uclive.ac.nz>    81163265
  *  - Jesse Sheehan <jps111@uclive.ac.nz>   53366509
- *
- *
  *
  * Description:
  * header file for control.c
