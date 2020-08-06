@@ -30,6 +30,21 @@
 
 #define CONTROL_RUN_FREQ 30 // run PID control 30 times a second
 
+/**
+* The altitude gains.
+*/
+#define ALT_KP 0.65f;
+#define ALT_KI 0.012f;
+#define ALT_KD 0.8f;
+
+/**
+* The yaw gains.
+*/
+#define YAW_KP 0.8f;
+#define YAW_KI 0.009f;
+#define YAW_KD 0.8f;
+
+
 int16_t volatile YAW_TARGET = 0; // Degrees
 uint8_t volatile ALT_TARGET = 0; // Percent
 
@@ -118,10 +133,6 @@ void control_update_altitude(void *pvParameters)
     float Igain = 0;
     float Dgain = 0;
 
-    float kp = 0;
-    float ki = 0;
-    float kd = 0;
-
     int16_t cumulative = 0;
     int16_t error = 0;
     int16_t lastError = 0;
@@ -141,10 +152,10 @@ void control_update_altitude(void *pvParameters)
 
 
     // the difference between what we want and what we have (as a percentage)
-    int16_t error = ALT_TARGET - alt_get();
+    error = ALT_TARGET - (int16_t)alt_get();
 
     // P control, *kp;
-    Pgain = error * kp;
+    Pgain = error * ALT_KP;
     Pgain = clamp(Pgain, -MAIN_GAIN_CLAMP, MAIN_GAIN_CLAMP);
 
     // I control
@@ -152,10 +163,10 @@ void control_update_altitude(void *pvParameters)
     if (duty > MIN_MAIN_DUTY && duty < MAX_MAIN_DUTY) {
         cumulative += clamp(error, -INTEGRAL_MAIN_CLAMP, INTEGRAL_MAIN_CLAMP);; // Clamp integral growth for large errors
     }
-    Igain = cumulative * ki;
+    Igain = cumulative * ALT_KI;
 
     // D control, clamped to 10%
-    Dgain = (error - lastError) * kd;
+    Dgain = (error - lastError) * ALT_KD;
     lastError = error;
     Dgain = clamp(Dgain, -MAIN_GAIN_CLAMP, MAIN_GAIN_CLAMP);
 
