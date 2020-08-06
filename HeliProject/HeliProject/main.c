@@ -40,11 +40,12 @@
 #include "pwm.h"
 #include "yaw.h"
 #include "buttons.h"
+#include "control.h"
 
 /*
  #
  #include "clock.h"
- #include "control.h"
+
  #include "config.h"
 
  #include "input.h"
@@ -65,14 +66,16 @@
 
 #define BUTTON_QUEUE_FREQ 50
 #define ALITUDE_MEAS_FREQ 10
-#define YAW_MEAS_FREQ 10
 #define CHECK_QUEUE_FREQ 10
+#define FSM_FREQ 50
 
 // Global constants .. bad but needed
 typedef enum HELI_STATE
 {
     LANDED = 0, TAKEOFF, FLYING, LANDING, HOVER
 } HELI_STATE;
+
+
 
 static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
 
@@ -165,10 +168,11 @@ void setAltitudeReference(int32_t new_altitude)
     if (xSemaphoreTake(g_altitudeMutex, (TickType_t) 10) == true) //Take mutex
     {
         g_altitudeReference = new_altitude;
+        set_altitude_target( (uint8_t) g_altitudeReference);
         xSemaphoreGive(g_altitudeMutex); //give mutex
     }
     //Set control -> altitude reference
-    //set_altitude_target( (uint8_t) g_altitudeReference)
+
 }
 
 /*
@@ -179,8 +183,8 @@ void setYawReference(int32_t new_yaw)
     if (xSemaphoreTake(g_yawMutex, (TickType_t) 10) == true) //Take mutex
     {
         g_yawReference = new_yaw;
+        set_yaw_target( (int16_t) g_yawReference);
         xSemaphoreGive(g_yawMutex); //give mutex
-        //set_yaw_target( (int16_t) g_yawReference)
     }
 }
 
@@ -340,47 +344,51 @@ void initFSM(void)
 void flight_mode_FSM(void *pvParameters)
 {
     // If state is TAKEOFF, find yaw reference, advance state,
-    switch (g_heliState)
-    {
-    case (TAKEOFF):
-        if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
+    while(1) {
+        switch (g_heliState)
         {
-            setAltitudeReference(10);
-        }
-        else if (alt_get() == 10)
-        {
-            changeState(FLYING);
-        }
-        else
-        {
-            //Set the tail rotor to move so it can find the yaw reference
-        }
-        break;
-    case (LANDING):
-        if (alt_get() == 0 && yawInDegrees() == 0)
-        {
-            changeState(LANDED);
-        }
-        else
-        {
-            setAltitudeReference(0);
-            setYawReference(0);
-        }
-        break;
-    case (FLYING):
-        //Turn on motors and do shit
+        case (TAKEOFF):
+            if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
+            {
+                setAltitudeReference(10);
+            }
+            else if (alt_get() == 10)
+            {
+                changeState(FLYING);
+            }
+            else
+            {
+                //Set the tail rotor to move so it can find the yaw reference
+            }
+            break;
+        case (LANDING):
+            if (alt_get() == 0 && yawInDegrees() == 0)
+            {
+                changeState(LANDED);
+            }
+            else
+            {
+                setAltitudeReference(0);
+                setYawReference(0);
+            }
+            break;
+        case (FLYING):
+            //Turn on motors and do shit
+            break;
+        case(HOVER):
+            //Will setup new mode 07/08/2020
+            setAltitudeReference(MAX_HEIGHT / 2);
+            break;
+        case (LANDED):
+            alt_reset_calibration_state();
+            yaw_reset_calibration_state();
+            //Turn off the motors?
+            break;
 
-        break;
-    case(HOVER):
-        //Will setup new mode 07/08/2020
-        setAltitudeReference(MAX_HEIGHT / 2);
-        break;
-    case (LANDED):
-        alt_reset_calibration_state();
-        yaw_reset_calibration_state();
-        //Turn off the motors?
-        break;
+            vTaskDelay(1 / (FSM_FREQ * portTICK_RATE_MS));
+        }
     }
+
 }
 
 
@@ -422,25 +430,41 @@ void createTasks(void)
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(disp_Values, "Display Update", 512, NULL, 4, NULL))
+    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 128, NULL, 4, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE != xTaskCreate(uart_update, "UART send", 512, NULL, 4, NULL))
+    if (pdTRUE != xTaskCreate(uart_update, "UART send", 128, NULL, 4, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(QueueButtonPushes, "Queue Button Pushes", 32, NULL, 4, NULL))
+    if (pdTRUE!= xTaskCreate(QueueButtonPushes, "Queue Button Pushes", 128, NULL, 4, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(CheckButtonQueue, "Check Button Queue", 32, NULL, 4, NULL))
+    if (pdTRUE!= xTaskCreate(CheckButtonQueue, "Check Button Queue", 128, NULL, 4, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
+
+    if (pdTRUE!= xTaskCreate(control_update_altitude, "Altitude PID", 128, NULL, 4, NULL))
+    {
+        while (1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
+    if (pdTRUE!= xTaskCreate(control_update_yaw, "Yaw PID", 128, NULL, 4, NULL))
+    {
+       while (1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
+    if (pdTRUE!= xTaskCreate(flight_mode_FSM, "FSM", 128, NULL, 4, NULL))
+    {
+        while (1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
 }
 
 // UART sender task
@@ -468,12 +492,9 @@ void uart_update(void *pvParameters)
             //uint8_t tail_rotor_duty = (int8_t) get_rand_percent();
             uint8_t operating_mode = g_heliState;
             //uint8_t operating_mode = IN_FLIGHT;
-            usprintf(g_buffer, "t_yaw %d, yaw %d, t_alt %d, alt %d, state %d\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, operating_mode);
-            //usprintf(g_buffer, "t_yaw %d  yaw %d  t_Alt %d  alt %d  m_duty %d  t_duty %d  state %u\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, main_rotor_duty, tail_rotor_duty, operating_mode);
-
-            // send it
+            usprintf(g_buffer, "t_y:%d, y:%d, t_a:%d, a:%d, st:%d, m_d:%d, t_d:%d\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, operating_mode, main_rotor_duty, tail_rotor_duty);
             uart_send(g_buffer);
-            vTaskDelay(500 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
+            vTaskDelay(250 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
     }
 }
 
