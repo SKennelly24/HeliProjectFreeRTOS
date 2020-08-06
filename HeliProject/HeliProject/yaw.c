@@ -58,8 +58,8 @@ int A_B = NULL;
 int YAW = 0;
 int32_t g_referenceYaw;
 static bool g_has_been_calibrated = false;
-
-
+// ************************* GLOBALS *****************************************
+void QDIntHandler(void);
 // ********************** QUADRATURE DECODING FUNCTIONS **********************
 //
 // Interrupt for to check if the helicopter has found the zero yaw reference
@@ -210,7 +210,9 @@ void QDIntHandler(void)
 }
 
 
-/* Calculates yaw in degrees from slots in yaw disc */
+/*
+ * Calculates yaw in degrees from slots in yaw disc
+ */
 int yawInDegrees(void)
 {
     IntMasterDisable();
