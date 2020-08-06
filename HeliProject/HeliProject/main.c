@@ -112,7 +112,6 @@ void initButtonQueue(void)
 {
     g_buttonQueue = xQueueCreate(QUEUE_SIZE, sizeof(uint8_t));
     g_buttonMutex = xSemaphoreCreateMutex();
-
 }
 
 
@@ -338,39 +337,46 @@ void initFSM(void)
 void flight_mode_FSM(void *pvParameters)
 {
     // If state is TAKEOFF, find yaw reference, advance state,
-    switch(g_heliState)
+    switch (g_heliState)
     {
-    case(TAKEOFF):
+    case (TAKEOFF):
         if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
         {
             setAltitudeReference(10);
-        } else if (alt_get() == 10) {
+        }
+        else if (alt_get() == 10)
+        {
             changeState(FLYING);
-        } else {
+        }
+        else
+        {
             //Set the tail rotor to move so it can find the yaw reference
         }
         break;
-    case(LANDING):
-        if (alt_get() == 0 && yawInDegrees() == 0) {
+    case (LANDING):
+        if (alt_get() == 0 && yawInDegrees() == 0)
+        {
             changeState(LANDED);
-        } else {
+        }
+        else
+        {
             setAltitudeReference(0);
             setYawReference(0);
         }
         break;
-    case(FLYING):
+    case (FLYING):
         //Turn on motors and do shit
+
         break;
-    case(HOVER):
-        //Will setup new mode 07/08/2020
+    case (HOVER):
+        setAltitudeReference(50);
         break;
-    case(LANDED):
+    case (LANDED):
         alt_reset_calibration_state();
         yaw_reset_calibration_state();
         //Turn off the motors?
         break;
     }
-
 }
 
 
