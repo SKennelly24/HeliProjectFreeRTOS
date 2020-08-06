@@ -17,13 +17,11 @@
 #include <stdint.h>
 
 #include "control.h"
-#include "setpoint.h"
 #include "altitude.h"
 #include "yaw.h"
 #include "pwm.h"
 #include "flight_mode.h"
 #include "utils.h"
-
 
 // RTOS
 #include "FreeRTOS.h"
@@ -197,16 +195,9 @@ void control_update_yaw(void *pvParameters)
     int16_t lastError = 0;
     int8_t duty = 0;                // Percent
     int8_t new_Duty = 0;
-    int16_t yaw_target = 0;         // Degrees
 
     while(1)
     {
-        /*
-        if (!g_enable_yaw)
-        {
-            return;
-        }
-        */
 
         // the difference between what we want and what we have (in degrees)
         error = (YAW_TARGET - yawInDegrees());    // Update our target
