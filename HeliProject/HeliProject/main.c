@@ -493,8 +493,6 @@ void uart_update(void *pvParameters)
             uint8_t operating_mode = g_heliState;
             //uint8_t operating_mode = IN_FLIGHT;
             usprintf(g_buffer, "t_y:%d, y:%d, t_a:%d, a:%d, st:%d, m_d:%d, t_d:%d\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, operating_mode, main_rotor_duty, tail_rotor_duty);
-            //usprintf(g_buffer, "t_yaw%d, yaw%d, t_alt%d, alt%d, state%d\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, operating_mode);
-            //usprintf(g_buffer, "t_yaw %d  yaw %d  t_Alt %d  alt %d  m_duty %d  t_duty %d  state %u\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, main_rotor_duty, tail_rotor_duty, operating_mode);
             uart_send(g_buffer);
             vTaskDelay(250 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
     }
