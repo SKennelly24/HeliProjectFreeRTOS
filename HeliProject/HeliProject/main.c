@@ -348,15 +348,14 @@ void flight_mode_FSM(void *pvParameters)
         switch (g_heliState)
         {
         case (TAKEOFF):
-            if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
+            if (alt_get() >= 10)
+            {
+                changeState(FLYING);
+            }
+            else if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
             {
                 set_PID_ON();               //
                 setAltitudeReference(10);   //
-            }
-            else if (alt_get() == 10)       //FLYING, once target altitude reached
-            {
-                changeState(FLYING);
-
             }
             else
             {
