@@ -371,14 +371,9 @@ void flight_mode_FSM(void *pvParameters)
         //Turn on motors and do shit
 
         break;
-<<<<<<< HEAD
-    case (HOVER):
-        setAltitudeReference(50);
-=======
     case(HOVER):
         //Will setup new mode 07/08/2020
         setAltitudeReference(MAX_HEIGHT / 2);
->>>>>>> 876fc49116250f05d44dead6b53285943a95b714
         break;
     case (LANDED):
         alt_reset_calibration_state();
@@ -427,8 +422,7 @@ void createTasks(void)
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE
-            != xTaskCreate(disp_Values, "Display Update", 512, NULL, 4, NULL))
+    if (pdTRUE!= xTaskCreate(disp_Values, "Display Update", 512, NULL, 4, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
