@@ -125,7 +125,7 @@ void CheckQueueButton(uint8_t button)
     //printf("Checking button %d", button);
     uint8_t buttonState;
     buttonState = checkButton(button);
-    if (buttonState == PUSHED || ((button == SW1) && button == RELEASED))
+    if (buttonState == PUSHED || ((button == SW1) && (buttonState == RELEASED)))
     {
         if (xSemaphoreTake(g_buttonMutex, (TickType_t) 10) == true) //Take mutex
         {
@@ -168,6 +168,8 @@ void setAltitudeReference(int32_t new_altitude)
         g_altitudeReference = new_altitude;
         xSemaphoreGive(g_altitudeMutex); //give mutex
     }
+    //Set control -> altitude reference
+    //set_altitude_target( (uint8_t) g_altitudeReference)
 }
 
 /*
@@ -179,6 +181,7 @@ void setYawReference(int32_t new_yaw)
     {
         g_yawReference = new_yaw;
         xSemaphoreGive(g_yawMutex); //give mutex
+        //set_yaw_target( (int16_t) g_yawReference)
     }
 }
 
@@ -316,7 +319,7 @@ void CheckButtonQueue(void *pvParameters)
             if ((uxQueueMessagesWaiting(g_buttonQueue)) > 0)
             {
                 xQueueReceive(g_buttonQueue, &pressed_button, (TickType_t) 0);
-                UpdateReferences(pressed_button);
+                ButtonUpdates(pressed_button);
             }
             xSemaphoreGive(g_buttonMutex); //Gives it back
         }
@@ -363,6 +366,7 @@ void flight_mode_FSM(void *pvParameters)
         break;
     case(HOVER):
         //Will setup new mode 07/08/2020
+        setAltitudeReference(MAX_HEIGHT / 2);
         break;
     case(LANDED):
         alt_reset_calibration_state();
@@ -431,6 +435,40 @@ void createTasks(void)
     if (pdTRUE!= xTaskCreate(CheckButtonQueue, "Check Button Queue", 32, NULL, 4, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
+    }
+}
+
+// UART sender task
+void uart_update(void *pvParameters)
+{
+    //static const int UART_INPUT_BUFFER_SIZE = 40;
+    /**
+     * Buffer settings for UART
+     */
+    char g_buffer[100] = {0};        //fixed the buffer size to 40
+
+    while (1) {
+            // originals commented out and modified copies for test
+            //uint16_t target_yaw = setpoint_get_yaw();
+            int16_t target_yaw = g_yawReference;//get_rand_yaw();
+            //uint16_t actual_yaw = yaw_get();
+            int16_t actual_yaw = yawInDegrees();
+
+            //int16_t target_altitude = setpoint_get_altitude();
+            int16_t target_altitude = g_altitudeReference;//(int16_t) get_rand_percent();
+            int16_t actual_altitude = (int16_t) alt_get();
+            uint8_t main_rotor_duty = pwm_get_main_duty();
+            //uint8_t main_rotor_duty = (int8_t) get_rand_percent();
+            uint8_t tail_rotor_duty = pwm_get_tail_duty();
+            //uint8_t tail_rotor_duty = (int8_t) get_rand_percent();
+            uint8_t operating_mode = g_heliState;
+            //uint8_t operating_mode = IN_FLIGHT;
+            usprintf(g_buffer, "t_yaw %d, yaw %d, t_alt %d, alt %d, state %d\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, operating_mode);
+            //usprintf(g_buffer, "t_yaw %d  yaw %d  t_Alt %d  alt %d  m_duty %d  t_duty %d  state %u\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, main_rotor_duty, tail_rotor_duty, operating_mode);
+
+            // send it
+            uart_send(g_buffer);
+            vTaskDelay(500 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
     }
 }
 

@@ -24,21 +24,14 @@
  *
  * ***************************************************************/
 
-// Initialises Yaw
-// associated with the Quadrature decoding function
+/*
+ * Initialises the interrupts and GPIO pins for the yaw and yaw reference
+ */
 void initYaw(void);
 
-// ****************************************************************
-// currentQuad: Reads the difference in Pins and returns the value
-int currentQuad(void);
-// @return  Current state of the quad pins (which indictes which phase is leading)
-
-// ****************************************************************
-// QDIntHandler: The Finite state machine for quadrature decoding
-void QDIntHandler(void);
-
-// ****************************************************************
-// yawInDegrees: Converts between Raw Yaw to Yaw in degrees
+/*
+ *
+ */
 int yawInDegrees(void);
 // @return  Current heli yaw in +/- degrees from reference point
 
