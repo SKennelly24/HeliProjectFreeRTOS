@@ -230,8 +230,8 @@ void pwm_set_main_duty(int8_t t_duty)
 
 int8_t pwm_get_main_duty(void)
 {
-    //return g_main_duty;
-    return get_rand_percent();    // Test only
+    return g_main_duty;
+    //return get_rand_percent();    // Test only
 }
 
 
@@ -244,6 +244,6 @@ void pwm_set_tail_duty(int8_t t_duty)
 
 int8_t pwm_get_tail_duty(void)
 {
-    //return g_tail_duty;
-    return get_rand_percent();    // Test only
+    return g_tail_duty;
+    //return get_rand_percent();    // Test only
 }
