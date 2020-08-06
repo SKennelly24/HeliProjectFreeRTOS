@@ -20,7 +20,6 @@
 #include "altitude.h"
 #include "yaw.h"
 #include "pwm.h"
-#include "flight_mode.h"
 #include "utils.h"
 
 // RTOS
