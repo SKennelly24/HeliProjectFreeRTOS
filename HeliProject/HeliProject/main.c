@@ -40,11 +40,12 @@
 #include "pwm.h"
 #include "yaw.h"
 #include "buttons.h"
+#include "control.h"
 
 /*
  #
  #include "clock.h"
- #include "control.h"
+
  #include "config.h"
 
  #include "input.h"
@@ -73,6 +74,8 @@ typedef enum HELI_STATE
 {
     LANDED = 0, TAKEOFF, FLYING, LANDING, HOVER
 } HELI_STATE;
+
+
 
 static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
 
@@ -369,16 +372,10 @@ void flight_mode_FSM(void *pvParameters)
         break;
     case (FLYING):
         //Turn on motors and do shit
-
         break;
-<<<<<<< HEAD
-    case (HOVER):
-        setAltitudeReference(50);
-=======
     case(HOVER):
         //Will setup new mode 07/08/2020
         setAltitudeReference(MAX_HEIGHT / 2);
->>>>>>> 876fc49116250f05d44dead6b53285943a95b714
         break;
     case (LANDED):
         alt_reset_calibration_state();
