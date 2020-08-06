@@ -65,6 +65,8 @@ void control_enable_altitude(bool t_enabled);
  */
 void control_enable_yaw(bool t_enabled);
 
+void control_update_altitude(void *pvParameters);
+
 void control_update_yaw(void *pvParameters);
 
 void set_altitude_target(uint8_t new_alt_target);

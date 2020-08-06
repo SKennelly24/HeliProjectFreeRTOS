@@ -444,6 +444,17 @@ void createTasks(void)
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
+
+    if (pdTRUE!= xTaskCreate(control_update_altitude, "Altitude PID", 256, NULL, 4, NULL))
+    {
+        while (1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
+    if (pdTRUE!= xTaskCreate(control_update_yaw, "Yaw PID", 256, NULL, 4, NULL))
+    {
+       while (1);   // Oh no! Must not have had enough memory to create the task.
+    }
+
 }
 
 // UART sender task
@@ -476,7 +487,7 @@ void uart_update(void *pvParameters)
 
             // send it
             uart_send(g_buffer);
-            vTaskDelay(500 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
+            vTaskDelay(250 / portTICK_RATE_MS);  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
     }
 }
 

@@ -135,17 +135,16 @@ void control_update_altitude(void *pvParameters)
     while (1)
     {
 
+/*
     if (!g_enable_altitude)
     {
         return;
     }
+*/
 
-    if ( (ALT_TARGET - alt_target) != 0)    // If the target value has changed
-                {
-                // the difference between what we want and what we have (as a percentage)
-                int16_t error = ALT_TARGET - alt_get();
-                }
 
+    // the difference between what we want and what we have (as a percentage)
+    int16_t error = ALT_TARGET - alt_get();
 
     // P control, *kp;
     Pgain = error * kp;
@@ -202,16 +201,15 @@ void control_update_yaw(void *pvParameters)
 
     while(1)
     {
+        /*
         if (!g_enable_yaw)
         {
             return;
         }
+        */
 
         // the difference between what we want and what we have (in degrees)
-        if ( (YAW_TARGET - yaw_target) != 0)    // If the target value has changed
-            {
-            error = (yaw_target - yawInDegrees());    // Update our target
-            }
+        error = (YAW_TARGET - yawInDegrees());    // Update our target
 
         // P control with +- 10% clamp
         Pgain = error*kp;
