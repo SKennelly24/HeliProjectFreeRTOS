@@ -64,7 +64,7 @@
 
 #define QUEUE_SIZE 16
 
-#define BUTTON_QUEUE_FREQ 50
+#define BUTTON_QUEUE_FREQ 25
 #define ALITUDE_MEAS_FREQ 10
 #define CHECK_QUEUE_FREQ 10
 #define FSM_FREQ 50
@@ -363,14 +363,17 @@ void flight_mode_FSM(void *pvParameters)
             {
                 //Set the rotors to move so it can find the yaw reference
                 //Suggest pwm_main = % and tail = %
-                pwm_set_main_duty(3);
-                pwm_set_tail_duty(25);
+                pwm_set_main_duty(1);
+                pwm_set_tail_duty(20);
             }
             break;
         case (LANDING):
             if (alt_get() == 0 && yawInDegrees() == 0)
             {
                 changeState(LANDED);
+                set_PID_OFF();
+                pwm_set_main_duty(0);
+                pwm_set_tail_duty(0);
                 //
             }
             else

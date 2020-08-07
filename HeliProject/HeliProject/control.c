@@ -28,95 +28,46 @@
 #include "FreeRTOS/include/queue.h"
 #include "FreeRTOS/include/semphr.h"
 
-#define CONTROL_RUN_FREQ 30 // run PID control 30 times a second
+#define CONTROL_RUN_FREQ 100 // run PID control 100 times a second
 
 /**
 * The altitude gains.
 */
-#define ALT_KP 0.65f;
-#define ALT_KI 0.012f;
-#define ALT_KD 0.8f;
+#define ALT_KP 0.2f;
+#define ALT_KI 0.001f;
+#define ALT_KD 0.93f;
 
 /**
 * The yaw gains.
 */
-#define YAW_KP 0.8f;
-#define YAW_KI 0.0095f;
-#define YAW_KD 0.75f;
+#define YAW_KP 0.3f;
+#define YAW_KI 0.001f;
+#define YAW_KD 0.83f;
 
 int16_t volatile YAW_TARGET = 0;    // Degrees
 uint8_t volatile ALT_TARGET = 0;    // Percent
 bool volatile PID_ACTIVE = false;   // A hack to turn the PID On/Off as needed.
 
-//struct control_state_s
-//{
-  /**
-   * Gains, errors and duty for the associated motor
-   */
- // float kp;
-//  float ki;
-//  float kd;
-//  int16_t lastError;
-//  int16_t cumulative;
-//};
-
-/**
- * Represents the internal state of the control system.
- */
-//typedef struct control_state_s ControlState;
-
 // Idle main duty, allows for faster take off, reducing dependence on integral error (duty cycle %).
-static const uint8_t IDLE_MAIN_DUTY = 25;
-
-static const uint8_t FIND_YAW_REF_MAIN_DUTY = 30;
-
+static const uint8_t IDLE_MAIN_DUTY = 20;
 // Min speed of main rotor, allows for proper anti-clockwise yaw control and clamps descent speed (duty cycle %)
 static const uint8_t MIN_MAIN_DUTY = 20;
 // Max speed of main motor to stay within spec (duty cycle %)
-static const uint8_t MAX_MAIN_DUTY = 70;
+static const uint8_t MAX_MAIN_DUTY = 65;    //was 70
 
 // Min speed of tail rotor, prevents wear on motor by idling it instead of completely powering off during large C-CW movements (duty cycle %)
 // also reduces the time taken to spool up motor during sudden large C-CW->CW movements.
-static const uint8_t MIN_TAIL_DUTY = 3;
+static const uint8_t MIN_TAIL_DUTY = 5;
 // Max speed of tail motor to stay within spec (duty cycle %)
-static const uint8_t MAX_TAIL_DUTY = 70;
+static const uint8_t MAX_TAIL_DUTY = 65;    //was 70
 
 // Clamps for Kp and Kd gains for each rotor (duty cycle %)
-static const uint8_t MAIN_GAIN_CLAMP = 10;
-static const uint8_t TAIL_GAIN_CLAMP = 10;
+static const uint8_t MAIN_GAIN_CLAMP = 10;  //was 10
+static const uint8_t TAIL_GAIN_CLAMP = 15;  //was 10
 
-// clamp for integral growth for large errors (error)
-static const uint8_t INTEGRAL_TAIL_CLAMP = 30;
+// clamp for Ki growth for large errors (error)
+static const uint8_t INTEGRAL_TAIL_CLAMP = 20; //was 30
 static const uint8_t INTEGRAL_MAIN_CLAMP = 5;
-
-//static ControlState g_control_altitude;
-//static ControlState g_control_yaw;
-
-static bool g_enable_altitude;
-static bool g_enable_yaw;
-
-/**
- * Helper function to create a ControlState struct from a ControlGains struct.
- */
-/*
-ControlState control_get_state_from_gains(ControlGains t_gains)
-{
-    return (ControlState){
-        t_gains.kp, // Kp
-        t_gains.ki, // Ki
-        t_gains.kd, // Kd
-        0, // lastError
-        0, // cumulative error
-        0}; // current duty% of motor
-}
-
-void control_init(ControlGains t_altitude_gains, ControlGains t_yaw_gains)
-{
-    // initialise the control states of the altitude and yaw
-    g_control_altitude = control_get_state_from_gains(t_altitude_gains);
-    g_control_yaw = control_get_state_from_gains(t_yaw_gains);
-}
-*/
 
 void set_altitude_target(uint8_t new_alt_target)
 {
@@ -151,17 +102,9 @@ void control_update_altitude(void *pvParameters)
     int16_t lastError = 0;
     int8_t duty = 0;                // Percent
     int8_t new_Duty = 0;
-    int8_t alt_target = 0;
 
     while (1)
     {
-
-/*
-    if (!g_enable_altitude)
-    {
-        return;
-    }
-*/
 
     if (PID_ACTIVE)
     {
@@ -190,17 +133,16 @@ void control_update_altitude(void *pvParameters)
         // clamp motor to be within spec
         new_Duty = clamp(new_Duty, MIN_MAIN_DUTY, MAX_MAIN_DUTY);
 
+        // set the motor duty
+        pwm_set_main_duty(new_Duty);
+
         // update the duty
         duty = new_Duty;
-
-        // set the motor duty
-        pwm_set_main_duty(duty);
     }
     vTaskDelay(1 / (CONTROL_RUN_FREQ * portTICK_RATE_MS));
     //Not the right approach but using to get started
     }
 }
-
 
 
 void control_update_yaw(void *pvParameters)
@@ -229,13 +171,13 @@ void control_update_yaw(void *pvParameters)
             Pgain = clamp(Pgain, -TAIL_GAIN_CLAMP, TAIL_GAIN_CLAMP);
 
             // I control, only accumulate error if we are not motor duty limited (limits overshoot)
-            if (duty >= MIN_TAIL_DUTY && duty < MAX_TAIL_DUTY) //change from > to >=
-            {
-                cumulative += clamp(error, -INTEGRAL_TAIL_CLAMP, INTEGRAL_TAIL_CLAMP);; // Clamp integral growth for large errors
-            }
+            //if (duty > MIN_TAIL_DUTY && duty < MAX_TAIL_DUTY) //change
+            //{
+            //    cumulative += clamp(error, -INTEGRAL_TAIL_CLAMP, INTEGRAL_TAIL_CLAMP);; // Clamp integral growth for large errors
+            //}
             Igain = cumulative * YAW_KI;
 
-            // D control with +- 10% clamp
+            // D control with clamp
             Dgain = (error - lastError) * YAW_KD; // Control is called with fixed frequency so time delta can be ignored.
             lastError = error;
             Dgain = clamp(Dgain, -TAIL_GAIN_CLAMP, TAIL_GAIN_CLAMP);
@@ -246,48 +188,14 @@ void control_update_yaw(void *pvParameters)
             // clamp motor to be within spec
             new_Duty = clamp(new_Duty, MIN_TAIL_DUTY, MAX_TAIL_DUTY);
 
+            // set the motor duty
+            pwm_set_tail_duty(new_Duty);
+
             // update the duty
             duty = new_Duty;
-
-            // set the motor duty
-            pwm_set_tail_duty(duty);
-
             }
 
         vTaskDelay(1 / (CONTROL_RUN_FREQ * portTICK_RATE_MS));
         //Not the right approach but using to get started
     }
 }
-/*
-void control_enable_yaw(bool t_enabled)
-{
-    g_enable_yaw = t_enabled;
-    if (!g_enable_yaw)
-    {
-        g_control_yaw.cumulative = 0;
-        g_control_yaw.duty = 0;
-        g_control_yaw.lastError = 0;
-        pwm_set_tail_duty(0);
-    }
-    else
-    {
-        pwm_set_tail_duty(g_control_yaw.duty);
-    }
-}
-
-void control_enable_altitude(bool t_enabled)
-{
-    g_enable_altitude = t_enabled;
-    if (!g_enable_altitude)
-    {
-        g_control_altitude.cumulative = 0;
-        g_control_altitude.duty = 0;
-        g_control_altitude.lastError = 0;
-        pwm_set_main_duty(0);
-    }
-    else
-    {
-        pwm_set_main_duty(g_control_altitude.duty);
-    }
-}
-*/
