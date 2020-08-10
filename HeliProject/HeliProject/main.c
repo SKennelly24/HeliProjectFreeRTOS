@@ -47,6 +47,7 @@
 #include "task.h"
 #include "FreeRTOS/include/queue.h"
 #include "FreeRTOS/include/semphr.h"
+#include "FreeRTOS/include/timers.h"
 
 #define QUEUE_SIZE 16
 
@@ -54,13 +55,21 @@
 #define ALITUDE_MEAS_FREQ 10
 #define CHECK_QUEUE_FREQ 10
 #define FSM_FREQ 50
+#define NUM_TIMERS 1
+#define TIME_BETWEEN_DOUBLE 300
 
 // Global constants .. bad but needed
 typedef enum HELI_STATE
 {
-    LANDED = 0, TAKEOFF, FLYING, LANDING, HOVER
+    LANDED = 0, TAKEOFF, FLYING, LANDING
 } HELI_STATE;
 
+typedef enum TIMER_STATE
+{
+    NOT_STARTED = 0,
+    NOT_FINISHED,
+    FINISHED_QUEUE_BUTTON
+}TIMER_STATE;
 
 
 static const uint32_t SPLASH_SCREEN_WAIT_TIME = 3;
@@ -69,13 +78,33 @@ static QueueHandle_t g_buttonQueue;
 static SemaphoreHandle_t g_buttonMutex;
 
 static SemaphoreHandle_t g_changeStateMutex;
-static int8_t g_heliState = LANDED;
+static int8_t g_heliState = FLYING;
 
 static SemaphoreHandle_t g_altitudeMutex;
-static int32_t g_altitudeReference = 0;
+static int32_t g_altitudeReference = 10;
 
 static SemaphoreHandle_t g_yawMutex;
 static int32_t g_yawReference = 0;
+
+//Global timers
+static SemaphoreHandle_t g_timerMutex;
+static uint8_t g_timerFinished = NOT_STARTED;
+
+static TimerHandle_t upTimer;
+
+//0 no timer started, 1 timer started not finished yet, 2 timer started and finished need to queue button
+
+/*
+ * Changes the helicopter state to the given state
+ */
+void changeState(int8_t state_num)
+{
+    if (xSemaphoreTake(g_changeStateMutex, (TickType_t) 10) == true) //Take mutex
+    {
+        g_heliState = state_num;
+        xSemaphoreGive(g_changeStateMutex); //give mutex
+    }
+}
 
 
 /*
@@ -103,6 +132,69 @@ void initButtonQueue(void)
     g_buttonMutex = xSemaphoreCreateMutex();
 }
 
+/*
+ * Queue the button which has been pushed
+ */
+void QueueButton(uint8_t button)
+{
+    if (xSemaphoreTake(g_buttonMutex, (TickType_t) 10) == true) //Take mutex
+    {
+        xQueueSendToBack(g_buttonQueue, (void * ) &button, (TickType_t ) 0); //queue
+        xSemaphoreGive(g_buttonMutex); //give mutex
+    }
+}
+
+/*
+ * Change the timer state to the given state
+ */
+void ChangeTimerState(uint8_t newState)
+{
+    if (xSemaphoreTake(g_timerMutex, (TickType_t) 10) == true) //Take mutex
+    {
+        g_timerFinished = newState;
+        xSemaphoreGive(g_timerMutex); //give mutex
+    }
+}
+/*
+ * When the timer finishes this is called,
+ * changes the timer state to ensure button is then queued
+ */
+void FinishTimer(TimerHandle_t xTimer)
+{
+    ChangeTimerState(FINISHED_QUEUE_BUTTON);
+}
+
+/*
+ * Starts the timer
+ */
+void StartTimer(void)
+{
+    ChangeTimerState(NOT_FINISHED);
+    if (xTimerStart(upTimer, 0) != pdPASS)
+    {
+        //Couldn't start
+    }
+
+}
+
+/*
+ * Changes the state if button is double pressed,
+ * Queues button if the button wasn't pressed twice,
+ * Starts the timer if the button has just been pressed
+ */
+void ChangeUpButtonState(void)
+{
+    if ((g_timerFinished == NOT_FINISHED)) {
+        setAltitudeReference(MAX_HEIGHT / 2);
+        ChangeTimerState(NOT_STARTED);
+    } else if (g_timerFinished == FINISHED_QUEUE_BUTTON)
+    {
+        QueueButton(UP);
+        ChangeTimerState(NOT_STARTED);
+    } else {
+        StartTimer();
+    }
+}
 
 /*
  * Check the button state if it has been pushed then
@@ -113,13 +205,12 @@ void CheckQueueButton(uint8_t button)
     //printf("Checking button %d", button);
     uint8_t buttonState;
     buttonState = checkButton(button);
-    if (buttonState == PUSHED || ((button == SW1) && (buttonState == RELEASED)))
+    if ((button == UP) && (buttonState == PUSHED)) {
+        ChangeUpButtonState();
+    }
+    else if (buttonState == PUSHED || ((button == SW1) && (buttonState == RELEASED)))
     {
-        if (xSemaphoreTake(g_buttonMutex, (TickType_t) 10) == true) //Take mutex
-        {
-            xQueueSendToBack(g_buttonQueue, (void * ) &button, (TickType_t ) 0); //queue
-            xSemaphoreGive(g_buttonMutex); //give mutex
-        }
+        QueueButton(button);
     }
 }
 
@@ -251,17 +342,7 @@ int8_t get_state(void)
     return (g_heliState);
 }
 
-/*
- * Changes the helicopter state to the given state
- */
-void changeState(int8_t state_num)
-{
-    if (xSemaphoreTake(g_changeStateMutex, (TickType_t) 10) == true) //Take mutex
-    {
-        g_heliState = state_num;
-        xSemaphoreGive(g_changeStateMutex); //give mutex
-    }
-}
+
 
 
 
@@ -317,6 +398,12 @@ void CheckButtonQueue(void *pvParameters)
 }
 
 
+void createTimers(void)
+{
+    g_timerMutex = xSemaphoreCreateMutex();
+    upTimer = xTimerCreate("Up timer", TIME_BETWEEN_DOUBLE, pdFALSE, (void *) 0, FinishTimer);
+}
+
 /*
  * Initialises things for the FSM
  */
@@ -325,6 +412,7 @@ void initFSM(void)
     g_changeStateMutex = xSemaphoreCreateMutex();
     g_altitudeMutex = xSemaphoreCreateMutex();
     g_yawMutex = xSemaphoreCreateMutex();
+    createTimers();
 }
 
 void flight_mode_FSM(void *pvParameters)
@@ -369,12 +457,9 @@ void flight_mode_FSM(void *pvParameters)
             }
             break;
         case (FLYING):
+            set_PID_ON();
             //Turn on motors and do shit
             //flight controls active!
-            break;
-        case(HOVER):
-            //Will setup new mode 07/08/2020
-            setAltitudeReference(MAX_HEIGHT / 2);
             break;
         case (LANDED):
             alt_reset_calibration_state();
@@ -386,11 +471,9 @@ void flight_mode_FSM(void *pvParameters)
             pwm_set_main_duty(0);
             pwm_set_tail_duty(0);
             break;
-
-            vTaskDelay(1 / (FSM_FREQ * portTICK_RATE_MS));
         }
+        vTaskDelay(1 / (FSM_FREQ * portTICK_RATE_MS));
     }
-
 }
 
 

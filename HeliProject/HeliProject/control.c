@@ -179,9 +179,6 @@ void control_update_yaw(void *pvParameters)
             {
                 //cumulative += clamp(error, -INTEGRAL_TAIL_CLAMP, INTEGRAL_TAIL_CLAMP); // Clamp integral growth for large errors
                 cumulative += error;
-                if (cumulative < 0) {
-                    printf("WTF");
-                }
             }
             Igain = cumulative * YAW_KI;
 
