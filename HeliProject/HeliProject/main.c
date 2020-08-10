@@ -349,8 +349,8 @@ void flight_mode_FSM(void *pvParameters)
             {
                 //Set the rotors to move so it can find the yaw reference
                 //Suggest pwm_main = % and tail = %
-                pwm_set_main_duty(20);
-                pwm_set_tail_duty(5);
+                pwm_set_main_duty(15);
+                pwm_set_tail_duty(33);
             }
             break;
         case (LANDING):

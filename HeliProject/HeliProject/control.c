@@ -30,42 +30,42 @@
 #include "FreeRTOS/include/queue.h"
 #include "FreeRTOS/include/semphr.h"
 
-#define CONTROL_RUN_FREQ 50 // run PID control 100 times a second
+#define CONTROL_RUN_FREQ 75 // run PID control 100 times a second
 
 /**
 * The altitude gains.
 */
-#define ALT_KP 0.2f;
+#define ALT_KP 0.19f;
 #define ALT_KI 0.001f;
-#define ALT_KD 0.93f;
+#define ALT_KD 0.95f;
 
 /**
 * The yaw gains.
 */
-#define YAW_KP 0.3f;
+#define YAW_KP 0.25f;
 #define YAW_KI 0.001f;
-#define YAW_KD 0.83f;
+#define YAW_KD 0.85f;
 
 int16_t volatile YAW_TARGET = 0;    // Degrees
 uint8_t volatile ALT_TARGET = 0;    // Percent
 bool volatile PID_ACTIVE = false;   // A hack to turn the PID On/Off as needed.
 
 // Idle main duty, allows for faster take off, reducing dependence on integral error (duty cycle %).
-static const uint8_t IDLE_MAIN_DUTY = 20;
+static const uint8_t IDLE_MAIN_DUTY = 25;   // was 25
 // Min speed of main rotor, allows for proper anti-clockwise yaw control and clamps descent speed (duty cycle %)
-static const uint8_t MIN_MAIN_DUTY = 20;
+static const uint8_t MIN_MAIN_DUTY = 20;    // was 20
 // Max speed of main motor to stay within spec (duty cycle %)
-static const uint8_t MAX_MAIN_DUTY = 65;    //was 70
+static const uint8_t MAX_MAIN_DUTY = 65;    // was 70
 
 // Min speed of tail rotor, prevents wear on motor by idling it instead of completely powering off during large C-CW movements (duty cycle %)
 // also reduces the time taken to spool up motor during sudden large C-CW->CW movements.
-static const uint8_t MIN_TAIL_DUTY = 5;
+static const uint8_t MIN_TAIL_DUTY = 2;     // was 1
 // Max speed of tail motor to stay within spec (duty cycle %)
-static const uint8_t MAX_TAIL_DUTY = 65;    //was 70
+static const uint8_t MAX_TAIL_DUTY = 65;    // was 70
 
 // Clamps for Kp and Kd gains for each rotor (duty cycle %)
-static const uint8_t MAIN_GAIN_CLAMP = 10;  //was 10
-static const uint8_t TAIL_GAIN_CLAMP = 15;  //was 10
+static const uint8_t MAIN_GAIN_CLAMP = 15;  // was 10
+static const uint8_t TAIL_GAIN_CLAMP = 10;  // was 10
 
 // clamp for Ki growth for large errors (error)
 static const uint8_t INTEGRAL_TAIL_CLAMP = 20; //was 30
@@ -111,7 +111,7 @@ void control_update_altitude(void *pvParameters)
     if (PID_ACTIVE)
     {
         // the difference between what we want and what we have (as a percentage)
-        error = (int16_t)alt_get() - ALT_TARGET;
+        error = (int16_t)ALT_TARGET - alt_get();
 
         // P control, *kp;
         Pgain = error * ALT_KP;
@@ -120,7 +120,8 @@ void control_update_altitude(void *pvParameters)
         // I control
         // only accumulate error if we are not motor duty limited (limits overshoot)
         if (duty > MIN_MAIN_DUTY && duty < MAX_MAIN_DUTY) {
-            cumulative += clamp(error, -INTEGRAL_MAIN_CLAMP, INTEGRAL_MAIN_CLAMP);; // Clamp integral growth for large errors
+            cumulative += clamp(error, -INTEGRAL_MAIN_CLAMP, INTEGRAL_MAIN_CLAMP); // Clamp integral growth for large errors
+            //cumulative += error;
         }
         Igain = cumulative * ALT_KI;
 
