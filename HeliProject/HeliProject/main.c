@@ -42,20 +42,6 @@
 #include "buttons.h"
 #include "control.h"
 
-/*
- #
- #include "clock.h"
-
- #include "config.h"
-
- #include "input.h"
- #include "kernel.h"
-
- #include "setpoint.h"
- #include "flight_mode.h"
-
- */
-
 // RTOS
 #include "FreeRTOS.h"
 #include "task.h"
@@ -363,8 +349,8 @@ void flight_mode_FSM(void *pvParameters)
             {
                 //Set the rotors to move so it can find the yaw reference
                 //Suggest pwm_main = % and tail = %
-                pwm_set_main_duty(1);
-                pwm_set_tail_duty(20);
+                pwm_set_main_duty(20);
+                pwm_set_tail_duty(5);
             }
             break;
         case (LANDING):

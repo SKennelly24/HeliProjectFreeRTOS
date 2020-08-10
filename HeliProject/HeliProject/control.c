@@ -15,6 +15,8 @@
  *
  ******************************************************************************/
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "control.h"
 #include "altitude.h"
@@ -28,7 +30,7 @@
 #include "FreeRTOS/include/queue.h"
 #include "FreeRTOS/include/semphr.h"
 
-#define CONTROL_RUN_FREQ 100 // run PID control 100 times a second
+#define CONTROL_RUN_FREQ 50 // run PID control 100 times a second
 
 /**
 * The altitude gains.
@@ -109,7 +111,7 @@ void control_update_altitude(void *pvParameters)
     if (PID_ACTIVE)
     {
         // the difference between what we want and what we have (as a percentage)
-        error = ALT_TARGET - (int16_t)alt_get();
+        error = (int16_t)alt_get() - ALT_TARGET;
 
         // P control, *kp;
         Pgain = error * ALT_KP;
@@ -152,7 +154,7 @@ void control_update_yaw(void *pvParameters)
     float Igain = 0;
     float Dgain = 0;
 
-    int16_t cumulative = 0;
+    int32_t cumulative = 0;
     int16_t error = 0;
     int16_t lastError = 0;
     int8_t duty = 0;                // Percent
@@ -165,16 +167,21 @@ void control_update_yaw(void *pvParameters)
             {
             // the difference between what we want and what we have (in degrees)
             error = (YAW_TARGET - yawInDegrees());    // Update our target
+            //Is this actually right
 
             // P control with +- 10% clamp
             Pgain = error * YAW_KP;
-            Pgain = clamp(Pgain, -TAIL_GAIN_CLAMP, TAIL_GAIN_CLAMP);
+            //Pgain = clamp(Pgain, -TAIL_GAIN_CLAMP, TAIL_GAIN_CLAMP);
 
             // I control, only accumulate error if we are not motor duty limited (limits overshoot)
-            //if (duty > MIN_TAIL_DUTY && duty < MAX_TAIL_DUTY) //change
-            //{
-            //    cumulative += clamp(error, -INTEGRAL_TAIL_CLAMP, INTEGRAL_TAIL_CLAMP);; // Clamp integral growth for large errors
-            //}
+            if (duty > MIN_TAIL_DUTY && duty < MAX_TAIL_DUTY) //change
+            {
+                //cumulative += clamp(error, -INTEGRAL_TAIL_CLAMP, INTEGRAL_TAIL_CLAMP); // Clamp integral growth for large errors
+                cumulative += error;
+                if (cumulative < 0) {
+                    printf("WTF");
+                }
+            }
             Igain = cumulative * YAW_KI;
 
             // D control with clamp
@@ -191,7 +198,6 @@ void control_update_yaw(void *pvParameters)
             // set the motor duty
             pwm_set_tail_duty(new_Duty);
 
-            // update the duty
             duty = new_Duty;
             }
 

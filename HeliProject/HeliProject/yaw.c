@@ -66,9 +66,11 @@ void QDIntHandler(void);
 //
 void referenceInterrupt(void)
 {
-    YAW = 0;
+    if (!g_has_been_calibrated) {
+        YAW = 0;
+        g_has_been_calibrated = true;
+    }
     GPIOIntClear(YAW_REFERENCE_BASE, YAW_REFERENCE_PIN);
-    g_has_been_calibrated = true;
 }
 
 
