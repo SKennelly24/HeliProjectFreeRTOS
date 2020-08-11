@@ -161,7 +161,9 @@ void ChangeTimerState(uint8_t newState)
  */
 void FinishTimer(TimerHandle_t xTimer)
 {
-    ChangeTimerState(FINISHED_QUEUE_BUTTON);
+    if (g_timerFinished != NOT_STARTED) {
+        ChangeTimerState(NOT_STARTED);
+    }
 }
 
 /*
@@ -187,11 +189,8 @@ void ChangeUpButtonState(void)
     if ((g_timerFinished == NOT_FINISHED)) {
         setAltitudeReference(MAX_HEIGHT / 2);
         ChangeTimerState(NOT_STARTED);
-    } else if (g_timerFinished == FINISHED_QUEUE_BUTTON)
-    {
-        QueueButton(UP);
-        ChangeTimerState(NOT_STARTED);
     } else {
+        QueueButton(UP);
         StartTimer();
     }
 }
