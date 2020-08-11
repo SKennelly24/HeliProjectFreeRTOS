@@ -67,8 +67,7 @@ typedef enum HELI_STATE
 typedef enum TIMER_STATE
 {
     NOT_STARTED = 0,
-    NOT_FINISHED,
-    FINISHED_QUEUE_BUTTON
+    NOT_FINISHED
 }TIMER_STATE;
 
 
@@ -87,13 +86,18 @@ static SemaphoreHandle_t g_yawMutex;
 static int32_t g_yawReference = 0;
 
 //Global timers
-static SemaphoreHandle_t g_timerMutex;
-static uint8_t g_timerFinished = NOT_STARTED;
+static SemaphoreHandle_t g_upTimerMutex;
+static uint8_t g_upTimerFinished = NOT_STARTED;
+
+static SemaphoreHandle_t g_rightTimerMutex;
+static uint8_t g_rightTimerFinished = NOT_STARTED;
 
 static TimerHandle_t upTimer;
 
 //0 no timer started, 1 timer started not finished yet, 2 timer started and finished need to queue button
 
+
+/***********************************Changing mutex values******************************************/
 /*
  * Changes the helicopter state to the given state
  */
@@ -103,6 +107,58 @@ void changeState(int8_t state_num)
     {
         g_heliState = state_num;
         xSemaphoreGive(g_changeStateMutex); //give mutex
+    }
+}
+
+/*
+ * Sets the altitude reference
+ */
+void setAltitudeReference(int32_t new_altitude)
+{
+    if (xSemaphoreTake(g_altitudeMutex, (TickType_t) 10) == true) //Take mutex
+    {
+        g_altitudeReference = new_altitude;
+        set_altitude_target( (uint8_t) g_altitudeReference);
+        xSemaphoreGive(g_altitudeMutex); //give mutex
+    }
+    //Set control -> altitude reference
+
+}
+
+/*
+ * Change the timer state to the given state
+ */
+void ChangeTimerState(uint8_t newState, SemaphoreHandle_t * timerMutex, uint8_t * timerState)
+{
+    if (xSemaphoreTake(*timerMutex, (TickType_t) 10) == true) //Take mutex
+    {
+        *timerState = newState;
+        xSemaphoreGive(*timerMutex); //give mutex
+    }
+}
+
+/*
+ * Sets the yaw reference
+ */
+void setYawReference(int32_t new_yaw)
+{
+    if (xSemaphoreTake(g_yawMutex, (TickType_t) 10) == true) //Take mutex
+    {
+        g_yawReference = new_yaw;
+        set_yaw_target( (int16_t) g_yawReference);
+        xSemaphoreGive(g_yawMutex); //give mutex
+    }
+}
+
+/*
+ * Queue the button which has been pushed
+ */
+void QueueButton(uint8_t button)
+{
+    if (xSemaphoreTake(g_buttonMutex, (TickType_t) 10) == true) //Take mutex
+    {
+        xQueueSendToBack(g_buttonQueue, (void * ) &button, (TickType_t ) 0); //queue
+        xSemaphoreGive(g_buttonMutex); //give mutex
     }
 }
 
@@ -132,38 +188,23 @@ void initButtonQueue(void)
     g_buttonMutex = xSemaphoreCreateMutex();
 }
 
-/*
- * Queue the button which has been pushed
- */
-void QueueButton(uint8_t button)
-{
-    if (xSemaphoreTake(g_buttonMutex, (TickType_t) 10) == true) //Take mutex
-    {
-        xQueueSendToBack(g_buttonQueue, (void * ) &button, (TickType_t ) 0); //queue
-        xSemaphoreGive(g_buttonMutex); //give mutex
-    }
-}
 
-/*
- * Change the timer state to the given state
- */
-void ChangeTimerState(uint8_t newState)
-{
-    if (xSemaphoreTake(g_timerMutex, (TickType_t) 10) == true) //Take mutex
-    {
-        g_timerFinished = newState;
-        xSemaphoreGive(g_timerMutex); //give mutex
-    }
-}
+
+
 /*
  * When the timer finishes this is called,
  * changes the timer state to ensure button is then queued
  */
-void FinishTimer(TimerHandle_t xTimer)
+void FinishTimer(TimerHandle_t finishedTimer)
 {
-    if (g_timerFinished != NOT_STARTED) {
-        ChangeTimerState(NOT_STARTED);
+    if (finishedTimer == upTimer ) {
+        if (g_upTimerFinished != NOT_STARTED) {
+            ChangeTimerState(NOT_STARTED, &g_upTimerMutex, &g_upTimerFinished);
+        }
+    } else {
+
     }
+
 }
 
 /*
@@ -171,7 +212,7 @@ void FinishTimer(TimerHandle_t xTimer)
  */
 void StartTimer(void)
 {
-    ChangeTimerState(NOT_FINISHED);
+    ChangeTimerState(NOT_FINISHED, &g_upTimerMutex, &g_upTimerFinished);
     if (xTimerStart(upTimer, 0) != pdPASS)
     {
         //Couldn't start
@@ -186,9 +227,9 @@ void StartTimer(void)
  */
 void ChangeUpButtonState(void)
 {
-    if ((g_timerFinished == NOT_FINISHED)) {
+    if ((g_upTimerFinished == NOT_FINISHED)) {
         setAltitudeReference(MAX_HEIGHT / 2);
-        ChangeTimerState(NOT_STARTED);
+        ChangeTimerState(NOT_STARTED, &g_upTimerMutex, &g_upTimerFinished);
     } else {
         QueueButton(UP);
         StartTimer();
@@ -236,33 +277,9 @@ void QueueButtonPushes(void *pvParameters)
     }
 }
 
-/*
- * Sets the altitude reference
- */
-void setAltitudeReference(int32_t new_altitude)
-{
-    if (xSemaphoreTake(g_altitudeMutex, (TickType_t) 10) == true) //Take mutex
-    {
-        g_altitudeReference = new_altitude;
-        set_altitude_target( (uint8_t) g_altitudeReference);
-        xSemaphoreGive(g_altitudeMutex); //give mutex
-    }
-    //Set control -> altitude reference
 
-}
 
-/*
- * Sets the yaw reference
- */
-void setYawReference(int32_t new_yaw)
-{
-    if (xSemaphoreTake(g_yawMutex, (TickType_t) 10) == true) //Take mutex
-    {
-        g_yawReference = new_yaw;
-        set_yaw_target( (int16_t) g_yawReference);
-        xSemaphoreGive(g_yawMutex); //give mutex
-    }
-}
+
 
 /*
  * Updates the altitude and yaw references given the button press
@@ -399,7 +416,7 @@ void CheckButtonQueue(void *pvParameters)
 
 void createTimers(void)
 {
-    g_timerMutex = xSemaphoreCreateMutex();
+    g_upTimerMutex = xSemaphoreCreateMutex();
     upTimer = xTimerCreate("Up timer", TIME_BETWEEN_DOUBLE, pdFALSE, (void *) 0, FinishTimer);
 }
 
