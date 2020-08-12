@@ -40,7 +40,8 @@
 #include "pwm.h"
 #include "yaw.h"
 #include "buttons.h"
-#include "control.h"
+#include "pidControl.h"
+//#include "control.h"
 
 // RTOS
 #include "FreeRTOS.h"
@@ -55,13 +56,18 @@
 #define ALITUDE_MEAS_FREQ 10
 #define CHECK_QUEUE_FREQ 10
 #define FSM_FREQ 50
-#define NUM_TIMERS 1
-#define TIME_BETWEEN_DOUBLE 300
+#define TIME_BETWEEN_DOUBLE 1000
+#define YAW_SETTLE_RANGE 10
+#define YAW_CHANGE 15
 
 // Global constants .. bad but needed
 typedef enum HELI_STATE
 {
-    LANDED = 0, TAKEOFF, FLYING, LANDING
+    LANDED = 0,
+    TAKEOFF,
+    FLYING,
+    LANDING,
+    SPIN_360
 } HELI_STATE;
 
 typedef enum TIMER_STATE
@@ -77,10 +83,10 @@ static QueueHandle_t g_buttonQueue;
 static SemaphoreHandle_t g_buttonMutex;
 
 static SemaphoreHandle_t g_changeStateMutex;
-static int8_t g_heliState = FLYING;
+static int8_t g_heliState = LANDED;
 
 static SemaphoreHandle_t g_altitudeMutex;
-static int32_t g_altitudeReference = 10;
+static int32_t g_altitudeReference = 0;
 
 static SemaphoreHandle_t g_yawMutex;
 static int32_t g_yawReference = 0;
@@ -93,11 +99,14 @@ static SemaphoreHandle_t g_rightTimerMutex;
 static uint8_t g_rightTimerFinished = NOT_STARTED;
 
 static TimerHandle_t upTimer;
+static TimerHandle_t rightTimer;
 
 //0 no timer started, 1 timer started not finished yet, 2 timer started and finished need to queue button
 
+/***********************************Prototypes*****************************************/
+void FinishTimer(TimerHandle_t finishedTimer);
 
-/***********************************Changing mutex values******************************************/
+/***********************************Changing mutex values******************************/
 /*
  * Changes the helicopter state to the given state
  */
@@ -140,14 +149,19 @@ void ChangeTimerState(uint8_t newState, SemaphoreHandle_t * timerMutex, uint8_t 
 /*
  * Sets the yaw reference
  */
-void setYawReference(int32_t new_yaw)
+bool setYawReference(int16_t new_yaw)
 {
+    bool worked;
     if (xSemaphoreTake(g_yawMutex, (TickType_t) 10) == true) //Take mutex
     {
         g_yawReference = new_yaw;
         set_yaw_target( (int16_t) g_yawReference);
         xSemaphoreGive(g_yawMutex); //give mutex
+        worked = true;
+    } else {
+        worked = false;
     }
+    return worked;
 }
 
 /*
@@ -162,6 +176,67 @@ void QueueButton(uint8_t button)
     }
 }
 
+/***********************************Initialises ******************************************/
+/*
+ * Initialise the button queue
+ */
+void initButtonQueue(void)
+{
+    g_buttonQueue = xQueueCreate(QUEUE_SIZE, sizeof(uint8_t));
+    g_buttonMutex = xSemaphoreCreateMutex();
+}
+/*
+ * Initialise timers for button presses
+ */
+void createTimers(void)
+{
+    g_upTimerMutex = xSemaphoreCreateMutex();
+    upTimer = xTimerCreate("Up timer", TIME_BETWEEN_DOUBLE, pdFALSE, (void *) 0, FinishTimer);
+
+    g_rightTimerMutex = xSemaphoreCreateMutex();
+    rightTimer = xTimerCreate("Right timer", TIME_BETWEEN_DOUBLE, pdFALSE, (void *) 0, FinishTimer);
+}
+
+/*
+ * Initialises things for the FSM
+ */
+void initFSM(void)
+{
+    g_changeStateMutex = xSemaphoreCreateMutex();
+    g_altitudeMutex = xSemaphoreCreateMutex();
+    g_yawMutex = xSemaphoreCreateMutex();
+}
+
+
+/*
+ * Initialises clock, interrupts
+ * and everything for each task
+ */
+void initialise(void)
+{
+    // disable all interrupts
+    IntMasterDisable();
+
+    // Set the clock rate to 80 MHz
+    SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
+    SYSCTL_XTAL_16MHZ);
+
+    //Initialisation to things for tasks
+    alt_init();     // Altitude and ADC
+    disp_init();    // Display
+    uart_init();    // UART
+    pwm_init();     // PWM (overwrites LED)
+    initButtonQueue();
+    initButtons();
+    initFSM();
+    initYaw();
+    createTimers();
+
+    // Enable interrupts to the processor.
+    IntMasterEnable();
+}
+
+/***********************************Tasks and helper functions************************************************/
 
 /*
  * Initiates the altitude measurement,
@@ -178,18 +253,7 @@ void GetAltitude(void *pvParameters)
     // No way to kill this task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
-
-/*
- * Initialise the button queue
- */
-void initButtonQueue(void)
-{
-    g_buttonQueue = xQueueCreate(QUEUE_SIZE, sizeof(uint8_t));
-    g_buttonMutex = xSemaphoreCreateMutex();
-}
-
-
-
+//Button tasks and helper functions
 
 /*
  * When the timer finishes this is called,
@@ -202,7 +266,9 @@ void FinishTimer(TimerHandle_t finishedTimer)
             ChangeTimerState(NOT_STARTED, &g_upTimerMutex, &g_upTimerFinished);
         }
     } else {
-
+        if (g_rightTimerFinished != NOT_STARTED) {
+            ChangeTimerState(NOT_STARTED, &g_rightTimerMutex, &g_rightTimerFinished);
+        }
     }
 
 }
@@ -210,10 +276,10 @@ void FinishTimer(TimerHandle_t finishedTimer)
 /*
  * Starts the timer
  */
-void StartTimer(void)
+void StartTimer(TimerHandle_t * startTimer, SemaphoreHandle_t * timerMutex, uint8_t * timerState)
 {
-    ChangeTimerState(NOT_FINISHED, &g_upTimerMutex, &g_upTimerFinished);
-    if (xTimerStart(upTimer, 0) != pdPASS)
+    ChangeTimerState(NOT_FINISHED, timerMutex, timerState);
+    if (xTimerStart(*startTimer, 0) != pdPASS)
     {
         //Couldn't start
     }
@@ -232,7 +298,23 @@ void ChangeUpButtonState(void)
         ChangeTimerState(NOT_STARTED, &g_upTimerMutex, &g_upTimerFinished);
     } else {
         QueueButton(UP);
-        StartTimer();
+        StartTimer(&upTimer, &g_upTimerMutex, &g_upTimerFinished);
+    }
+}
+
+/*
+ * Changes the state if button is double pressed,
+ * Queues button if the button wasn't pressed twice,
+ * Starts the timer if the button has just been pressed
+ */
+void ChangeRightButtonState(void)
+{
+    if ((g_rightTimerFinished == NOT_FINISHED)) {
+        changeState(SPIN_360);
+        ChangeTimerState(NOT_STARTED, &g_rightTimerMutex, &g_rightTimerFinished);
+    } else {
+        QueueButton(RIGHT);
+        StartTimer(&rightTimer, &g_rightTimerMutex, &g_rightTimerFinished);
     }
 }
 
@@ -247,6 +329,8 @@ void CheckQueueButton(uint8_t button)
     buttonState = checkButton(button);
     if ((button == UP) && (buttonState == PUSHED)) {
         ChangeUpButtonState();
+    } else if ((button == RIGHT) && (buttonState == PUSHED)) {
+        ChangeRightButtonState();
     }
     else if (buttonState == PUSHED || ((button == SW1) && (buttonState == RELEASED)))
     {
@@ -273,12 +357,9 @@ void QueueButtonPushes(void *pvParameters)
             CheckQueueButton(LEFT);
             CheckQueueButton(RIGHT);
         }
-        vTaskDelay(1 / (BUTTON_QUEUE_FREQ * portTICK_RATE_MS));
+        vTaskDelay(1000 / (BUTTON_QUEUE_FREQ * portTICK_RATE_MS));
     }
 }
-
-
-
 
 
 /*
@@ -311,55 +392,23 @@ void UpdateReferences(int8_t pressed_button)
         }
         break;
     case RIGHT:
-        if (g_yawReference <= 164)
+        if (g_yawReference < (359 - YAW_CHANGE))
         {
-            setYawReference(g_yawReference + 15);
-        }
-        else
-        {
-            setYawReference(-345 + g_yawReference);
+            setYawReference(g_yawReference + YAW_CHANGE);
+        } else {
+            setYawReference(g_yawReference + YAW_CHANGE - 360);
         }
         break;
     case LEFT:
-        if (g_yawReference >= -165)
+        if (g_yawReference > YAW_CHANGE)
         {
-            setYawReference(g_yawReference - 15);
-        }
-        else
-        {
-            setYawReference(345 + g_yawReference);
+            setYawReference(g_yawReference - YAW_CHANGE);
+        } else {
+            setYawReference(g_yawReference - YAW_CHANGE + 360);
         }
         break;
     }
 }
-
-
-/*
- * Return the target yaw value in degrees
- */
-int32_t get_yaw_target(void)
-{
-    return (g_yawReference); //might need to cast to ??
-}
-
-/*
- * Returns the target altitude value in percent
- */
-int32_t get_altitude_target(void)
-{
-    return (g_altitudeReference); //might need to cast to ??
-}
-
-/*
- * Returns the helicopter current state (of FSM)
- */
-int8_t get_state(void)
-{
-    return (g_heliState);
-}
-
-
-
 
 
 /* Given the pressed button from the queue
@@ -409,28 +458,60 @@ void CheckButtonQueue(void *pvParameters)
             }
             xSemaphoreGive(g_buttonMutex); //Gives it back
         }
-        vTaskDelay(1 / (CHECK_QUEUE_FREQ * portTICK_RATE_MS));
+        vTaskDelay(1000 / (CHECK_QUEUE_FREQ * portTICK_RATE_MS));
+    }
+}
+bool yawInSettleRange(int16_t currentYaw)
+{
+    bool inRange;
+    int16_t upperBound = g_yawReference + YAW_SETTLE_RANGE;
+    int16_t lowerBound = g_yawReference - YAW_SETTLE_RANGE;
+    if ((currentYaw > lowerBound) && (currentYaw < upperBound))
+    {
+        inRange = true;
+    } else {
+        inRange = false;
+    }
+    return inRange;
+}
+
+void setSpinTarget(currentYaw) {
+    int16_t target = currentYaw - 90;
+    if (target > -1)
+    {
+        setYawReference(target);
+    } else {
+        setYawReference(target + 360);
+    }
+}
+void spin360(void)
+{
+    int16_t currentYaw = getYaw();
+    static int16_t firstYaw;
+    static uint8_t targets_acquired;
+
+    if (targets_acquired == 0)
+    {
+        firstYaw = g_yawReference;
+        setSpinTarget(g_yawReference);
+        targets_acquired++;
+    } else if ((firstYaw == g_yawReference) && yawInSettleRange(currentYaw))
+    {
+           changeState(FLYING);
+    } else if ((targets_acquired == 3) && yawInSettleRange(currentYaw)) {
+        setYawReference(firstYaw);
+    }
+    else if ((targets_acquired < 4) && yawInSettleRange(currentYaw))
+    {
+        setSpinTarget(g_yawReference);
+        targets_acquired++;
     }
 }
 
 
-void createTimers(void)
-{
-    g_upTimerMutex = xSemaphoreCreateMutex();
-    upTimer = xTimerCreate("Up timer", TIME_BETWEEN_DOUBLE, pdFALSE, (void *) 0, FinishTimer);
-}
-
 /*
- * Initialises things for the FSM
+ * The task for the FSM
  */
-void initFSM(void)
-{
-    g_changeStateMutex = xSemaphoreCreateMutex();
-    g_altitudeMutex = xSemaphoreCreateMutex();
-    g_yawMutex = xSemaphoreCreateMutex();
-    createTimers();
-}
-
 void flight_mode_FSM(void *pvParameters)
 {
     // If state is TAKEOFF, find yaw reference, advance state,
@@ -453,12 +534,12 @@ void flight_mode_FSM(void *pvParameters)
             {
                 //Set the rotors to move so it can find the yaw reference
                 //Suggest pwm_main = % and tail = %
-                pwm_set_main_duty(15);
-                pwm_set_tail_duty(33);
+                pwm_set_main_duty(25); //15
+                pwm_set_tail_duty(5); //33
             }
             break;
         case (LANDING):
-            if (alt_get() == 0 && yawInDegrees() == 0)
+            if (alt_get() == 0 && getYaw() == 0)
             {
                 changeState(LANDED);
                 set_PID_OFF();
@@ -487,38 +568,15 @@ void flight_mode_FSM(void *pvParameters)
             pwm_set_main_duty(0);
             pwm_set_tail_duty(0);
             break;
+        case (SPIN_360):
+            spin360();
+            //changeState(FLYING);
+            break;
         }
-        vTaskDelay(1 / (FSM_FREQ * portTICK_RATE_MS));
+        vTaskDelay(1000 / (FSM_FREQ * portTICK_RATE_MS));
     }
 }
 
-
-/*
- * Initialises clock, interrupts
- * and everything for each task
- */
-void initialise(void)
-{
-    // disable all interrupts
-    IntMasterDisable();
-
-    // Set the clock rate to 80 MHz
-    SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
-    SYSCTL_XTAL_16MHZ);
-
-    //Initialisation to things for tasks
-    alt_init();     // Altitude and ADC
-    disp_init();    // Display
-    uart_init();    // UART
-    pwm_init();     // PWM (overwrites LED)
-    initButtonQueue();
-    initButtons();
-    initFSM();
-    initYaw();
-
-    // Enable interrupts to the processor.
-    IntMasterEnable();
-}
 
 
 /*
@@ -551,12 +609,16 @@ void createTasks(void)
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(control_update_altitude, "Altitude PID", 128, NULL, 4, NULL))
+    /*if (pdTRUE!= xTaskCreate(control_update_altitude, "Altitude PID", 128, NULL, 4, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
     if (pdTRUE!= xTaskCreate(control_update_yaw, "Yaw PID", 128, NULL, 4, NULL))
+    {
+       while (1);   // Oh no! Must not have had enough memory to create the task.
+    }*/
+    if (pdTRUE!= xTaskCreate(apply_control, "PID", 128, NULL, 4, NULL))
     {
        while (1);   // Oh no! Must not have had enough memory to create the task.
     }
@@ -582,7 +644,7 @@ void uart_update(void *pvParameters)
             //uint16_t target_yaw = setpoint_get_yaw();
             int16_t target_yaw = g_yawReference;//get_rand_yaw();
             //uint16_t actual_yaw = yaw_get();
-            int16_t actual_yaw = yawInDegrees();
+            int16_t actual_yaw = getYaw();
 
             //int16_t target_altitude = setpoint_get_altitude();
             int16_t target_altitude = g_altitudeReference;//(int16_t) get_rand_percent();
@@ -601,6 +663,7 @@ void uart_update(void *pvParameters)
 
 
 int main(void)
+
 {
     initialise();
 
@@ -616,3 +679,4 @@ int main(void)
     // Should never get here since the RTOS should never "exit".
     while (1);
 }
+

@@ -32,7 +32,7 @@ void initYaw(void);
 /*
  *
  */
-int yawInDegrees(void);
+int16_t getYaw(void);
 // @return  Current heli yaw in +/- degrees from reference point
 
 /*

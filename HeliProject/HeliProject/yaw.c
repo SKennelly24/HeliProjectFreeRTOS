@@ -45,7 +45,10 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
+#include <ctype.h>
 #include <yaw.h>
+
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
@@ -55,7 +58,7 @@
 
 // ************************* GLOBALS *****************************************
 int A_B = NULL;
-int YAW = 0;
+int32_t YAW = 0;
 int32_t g_referenceYaw;
 static bool g_has_been_calibrated = false;
 // ************************* GLOBALS *****************************************
@@ -215,21 +218,14 @@ void QDIntHandler(void)
 /*
  * Calculates yaw in degrees from slots in yaw disc
  */
-int yawInDegrees(void)
+int16_t getYaw(void)
 {
     IntMasterDisable();
-    int32_t yawDeg = YAW * 360 / MAX_YAW;
+    int16_t yawDeg = (double) (YAW * 360) / MAX_YAW;
+    if (yawDeg < 0) {
+        yawDeg += 360;
+    }
     IntMasterEnable();
-
-    if (yawDeg >= 180)
-    {
-        yawDeg = (yawDeg - 360);
-    }
-    else if (yawDeg <= -180)
-    {
-        yawDeg = 360 + yawDeg;
-    }
-
     return yawDeg;
 }
 

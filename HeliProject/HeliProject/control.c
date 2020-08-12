@@ -71,7 +71,7 @@ static const uint8_t TAIL_GAIN_CLAMP = 10;  // was 10
 static const uint8_t INTEGRAL_TAIL_CLAMP = 20; //was 30
 static const uint8_t INTEGRAL_MAIN_CLAMP = 5;
 
-void set_altitude_target(uint8_t new_alt_target)
+/*void set_altitude_target(uint8_t new_alt_target)
 {
     ALT_TARGET = new_alt_target;
 }
@@ -89,7 +89,7 @@ void set_PID_ON(void)
 void set_PID_OFF(void)
 {
     PID_ACTIVE = false;
-}
+}*/
 
 
 void control_update_altitude(void *pvParameters)
@@ -168,7 +168,7 @@ void control_update_yaw(void *pvParameters)
         if (PID_ACTIVE)
             {
             // the difference between what we want and what we have (in degrees)
-            error = (YAW_TARGET - yawInDegrees());    // Update our target
+            error = (YAW_TARGET - getYaw());
             //Is this actually right
 
             // negative error implies set point is behind us (CCW direction)
