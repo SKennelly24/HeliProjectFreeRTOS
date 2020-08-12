@@ -25,8 +25,8 @@
 #define CONTROL_RUN_FREQ 50
 #define MIN_MAIN_DUTY 20
 #define MAX_MAIN_DUTY 65
-#define MIN_TAIL_DUTY 2
-#define MAX_TAIL_DUTY 65
+#define MIN_TAIL_DUTY 23
+#define MAX_TAIL_DUTY 70
 #define MAX_YAW 360
 
 static int16_t YAW_TARGET = 0;    // Degrees
@@ -45,8 +45,8 @@ static Controller altitudeController = {
 };
 
 static Controller yawController = {
-                                        .pGain = 0.5,
-                                        .iGain = 0.2,
+                                        .pGain = 0.51,
+                                        .iGain = 0.25,
                                         .errorIntegrated = 0.0
 };
 
