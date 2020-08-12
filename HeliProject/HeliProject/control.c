@@ -155,6 +155,7 @@ void control_update_yaw(void *pvParameters)
     float Igain = 0;
     float Dgain = 0;
 
+    bool clockWise = true;
     int32_t cumulative = 0;
     int16_t error = 0;
     int16_t lastError = 0;
@@ -169,6 +170,22 @@ void control_update_yaw(void *pvParameters)
             // the difference between what we want and what we have (in degrees)
             error = (YAW_TARGET - yawInDegrees());    // Update our target
             //Is this actually right
+
+            // negative error implies set point is behind us (CCW direction)
+            if (error < 0) {
+                clockWise = false;
+                error = abs(error);
+            }
+            // An error over 180 will always be further than going in the opposite direction
+            if (error > 180) {
+                error = (360 - error);
+                // flip whatever direction we were going in originally
+                clockWise = !clockWise;
+            }
+            // C-CW movement requires subtracting duty, so we need a negative error.
+            if (!clockWise) {
+                error = -error;
+            }
 
             // P control with +- 10% clamp
             Pgain = error * YAW_KP;
