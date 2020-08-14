@@ -1,23 +1,21 @@
-/*
- * circBuffT.h
- *
- *  Created on: 30/07/2020
- *      Author: sek40
- */
-
-#ifndef CIRCBUFT_H_
-#define CIRCBUFT_H_
-
 // *******************************************************
 //
 // circBufT.h
 //
 // Support for a circular buffer of uint32_t values on the
 //  Tiva processor.
-// P.J. Bones UCECE
-// Last modified:  7.3.2017
+// Written by:
+// - P.J. Bones UCECE
+// Modified by
+// - Sarah Kennelly
+// - Derrick Edward
+// - Manu Hamblyn
 //
 // *******************************************************
+
+#ifndef CIRCBUFT_H_
+#define CIRCBUFT_H_
+
 #include <stdint.h>
 
 // *******************************************************
