@@ -28,10 +28,10 @@
 #ifndef ALTITUDE_H_
 #define ALTITUDE_H_
 
-#define MAX_HEIGHT 100
-
 #include <stdint.h>
 #include <stdbool.h>
+
+#define MAX_HEIGHT 100
 
 /**
  * Initialises the altitude module.
@@ -45,13 +45,6 @@ void alt_init(void);
 void alt_update();
 
 /**
- * Calibrates the altitude to the current mean value.
- * This must be called before calling `void alt_update(void)`.
- *
- void alt_calibrate(int32_t alt_raw);
- */
-
-/**
  * Returns the mean altitude as a percentage (usually from 0 - 100). This value can be less than 0 or greater than 100.
  */
 int16_t alt_get(void);
@@ -61,10 +54,6 @@ int16_t alt_get(void);
  */
 bool alt_has_been_calibrated(void);
 
-/**
- * Performs an ADC conversion.
- */
-void alt_process_adc(void);
 
 /**
  * Resets the calibration state of the altitude.

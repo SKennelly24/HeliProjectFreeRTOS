@@ -246,7 +246,6 @@ void GetAltitude(void *pvParameters)
 {
     while (1)
     {
-        alt_process_adc();
         alt_update();
         vTaskDelay(1 / (ALITUDE_MEAS_FREQ * portTICK_RATE_MS)); //  Current frequency is
     }
@@ -461,6 +460,11 @@ void CheckButtonQueue(void *pvParameters)
         vTaskDelay(1000 / (CHECK_QUEUE_FREQ * portTICK_RATE_MS));
     }
 }
+
+/*
+ * Returns true if the given yaw is within in the settle range,
+ * else return false if the yaw is not
+ */
 bool yawInSettleRange(int16_t currentYaw)
 {
     bool inRange;
@@ -475,8 +479,11 @@ bool yawInSettleRange(int16_t currentYaw)
     return inRange;
 }
 
+/*
+ * Sets the yaw reference to next spin target
+ */
 void setSpinTarget(currentYaw) {
-    int16_t target = currentYaw - 90;
+    int16_t target = currentYaw + 90;
     if (target > -1)
     {
         setYawReference(target);
@@ -484,6 +491,11 @@ void setSpinTarget(currentYaw) {
         setYawReference(target + 360);
     }
 }
+/*
+ * Sets the first yaw for the heli to spin back to,
+ * sets the first target and four subsequent targets.
+ *
+ */
 void spin360(void)
 {
     int16_t currentYaw = getYaw();
@@ -508,6 +520,55 @@ void spin360(void)
     }
 }
 
+/*
+ * First rotate to the yaw reference by setting main and tail,
+ * then when altitude and yaw is calibrated put PID on and
+ * set altitude reference 10, yaw reference to 0,
+ * when these values have been reached move into flight mode
+ */
+void TakeOffSequence(void)
+{
+    if (alt_get() >= 10)
+    {
+        changeState(FLYING);
+        setYawReference(0);
+    }
+    else if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
+    {
+        set_PID_ON();               //
+        setAltitudeReference(10);   //
+        setYawReference(0);
+    }
+    else
+    {
+        //Set the rotors to move so it can find the yaw reference
+        //Suggest pwm_main = % and tail = %
+        pwm_set_main_duty(25); //15
+        pwm_set_tail_duty(5); //33
+    }
+}
+
+/*
+ * Set the altitude and yaw references to 0,
+ * If they are met turn off the main and tail motors
+ */
+void LandingSequence(void)
+{
+    if (alt_get() == 0 && getYaw() == 0)
+    {
+        changeState(LANDED);
+        set_PID_OFF();
+        pwm_set_main_duty(0);
+        pwm_set_tail_duty(0);
+        //
+    }
+    else
+    {
+        setAltitudeReference(0);
+        setYawReference(0);
+    }
+}
+
 
 /*
  * The task for the FSM
@@ -519,58 +580,26 @@ void flight_mode_FSM(void *pvParameters)
         switch (g_heliState)
         {
         case (TAKEOFF):
-            if (alt_get() >= 10)
-            {
-                changeState(FLYING);
-                setYawReference(0);
-            }
-            else if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
-            {
-                set_PID_ON();               //
-                setAltitudeReference(10);   //
-                setYawReference(0);
-            }
-            else
-            {
-                //Set the rotors to move so it can find the yaw reference
-                //Suggest pwm_main = % and tail = %
-                pwm_set_main_duty(25); //15
-                pwm_set_tail_duty(5); //33
-            }
+            TakeOffSequence();
             break;
         case (LANDING):
-            if (alt_get() == 0 && getYaw() == 0)
-            {
-                changeState(LANDED);
-                set_PID_OFF();
-                pwm_set_main_duty(0);
-                pwm_set_tail_duty(0);
-                //
-            }
-            else
-            {
-                setAltitudeReference(0);
-                setYawReference(0);
-            }
+            LandingSequence();
             break;
         case (FLYING):
-            set_PID_ON();
-            //Turn on motors and do shit
-            //flight controls active!
+            set_PID_ON(); //flight controls active!
             break;
         case (LANDED):
+            //Reset calibration on yaw and altitude
             alt_reset_calibration_state();
             yaw_reset_calibration_state();
-            //Turn off the motors?
-            //set the pwm_main and pwm_tail duty to zero
-            //set the pwm_main and pwm_tail duty to zero
+
+            //Turn off PID and set the pwm_main and pwm_tail duty to zero
             set_PID_OFF();
             pwm_set_main_duty(0);
             pwm_set_tail_duty(0);
             break;
         case (SPIN_360):
             spin360();
-            //changeState(FLYING);
             break;
         }
         vTaskDelay(1000 / (FSM_FREQ * portTICK_RATE_MS));
@@ -609,15 +638,6 @@ void createTasks(void)
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    /*if (pdTRUE!= xTaskCreate(control_update_altitude, "Altitude PID", 128, NULL, 4, NULL))
-    {
-        while (1);   // Oh no! Must not have had enough memory to create the task.
-    }
-
-    if (pdTRUE!= xTaskCreate(control_update_yaw, "Yaw PID", 128, NULL, 4, NULL))
-    {
-       while (1);   // Oh no! Must not have had enough memory to create the task.
-    }*/
     if (pdTRUE!= xTaskCreate(apply_control, "PID", 128, NULL, 4, NULL))
     {
        while (1);   // Oh no! Must not have had enough memory to create the task.

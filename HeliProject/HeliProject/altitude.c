@@ -1,37 +1,19 @@
 /*******************************************************************************
- * 
- * altitude.c
- * 
- * ENEL361 Helicopter Project
- * Friday Morning, Group 7
- * 
- * Written by:
- *  - Manu Hamblyn  <mfb31<@uclive.ac.nz>   95140875
- *  - Will Cowper   <wgc22@uclive.ac.nz>    81163265
- *  - Jesse Sheehan <jps111@uclive.ac.nz>   53366509
- * 
- * This file contains portions of code that written by P.J. Bones. These portions are noted in the comments.
- * 
- * Description:
- * This module contains functionality required for calculating the mean altitude
- * as a raw value and as a percentage of the overall height.
- * Functions are provided to initialise, calibrate, update and return
- * the altitude values.
- * 
- ******************************************************************************/
-/*******************************************************************************
  *
  * altitude.c
  *
  * ENEL361 Helicopter Project
  * Friday Morning, Group 7
  *
- * Written by:
- *  - Manu Hamblyn  <mfb31<@uclive.ac.nz>   95140875
- *  - Will Cowper   <wgc22@uclive.ac.nz>    81163265
- *  - Jesse Sheehan <jps111@uclive.ac.nz>   53366509
+ * Originally written by:
+ *  - Manu Hamblyn
+ *  - Will Cowper
+ *  - Jesse Sheehan
  *
- * This file contains portions of code that written by P.J. Bones. These portions are noted in the comments.
+ *  Modified by:
+ *  - Manu Hamblyn
+ *  - Sarah Kennelly
+ *  - Derrick Edward
  *
  * Description:
  * This module contains functionality required for calculating the mean altitude
@@ -43,6 +25,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <limits.h>
 
 #include "inc/hw_memmap.h"
@@ -51,10 +34,8 @@
 
 #include "altitude.h"
 #include "circBuffT.h"
-//#include "kernel.h"
-//#include "mutex.h"
 #include "utils.h"
-#include <stdio.h>
+
 
 #define ADC_RANGE 1241
 #define ONE_HUNDRED_PERCENT 100
@@ -64,27 +45,11 @@
 #define ADC_SEQUENCE 3
 #define ADC_STEP 0
 
-/**
- * The circular buffer used to store the raw ADC values for calculating the mean.
- */
-static circBuf_t g_circ_buffer;
-
-/**
- * The reference altitude. This is updated when calling the alt_calibrate function. This is required for calculating the altitude as a percentage.
- */
-static uint16_t g_alt_ref;
-
-/**
- * The mean altitude as a percentage of full height. This is updated when the `void alt_update()` function is called.
- */
-static int16_t g_alt_percent;
-
-/**
- * Indicates if the altitude has been calibrated yet. This is set when calling the `void alt_calibrate()` function and returned when calling the `bool alt_getIsCalibrated()` function.
- */
-static bool g_has_been_calibrated = false;
-
-static int16_t g_conversions = 0;
+static circBuf_t g_circ_buffer; // The circular buffer used to store the raw ADC values for calculating the mean.
+static uint16_t g_alt_ref; //The reference altitude. This is required for calculating the altitude as a percentage.
+static int16_t g_alt_percent; //The mean altitude as a percentage of full height. This is updated when the `void alt_update()` function is called.
+static bool g_has_been_calibrated = false; //Indicates if the altitude has been calibrated yet.
+static int16_t g_conversions = 0; //Counter to hold the amount of adc conversions
 
 
 /**
@@ -150,11 +115,12 @@ void alt_init_adc(void)
  */
 void alt_process_adc(void)
 {
-    g_conversions++;
+    if (!g_has_been_calibrated) {
+        g_conversions++;
+    }
     // Initiate a conversion
     ADCProcessorTrigger(ADC_BASE, ADC_SEQUENCE);
 }
-
 
 void alt_init(void)
 {
@@ -165,10 +131,10 @@ void alt_init(void)
     initCircBuf(&g_circ_buffer, ALT_BUF_SIZE);
 }
 
-//******************************************************
-//Given the sample mean ADC returns the altitude percent
-//******************************************************
-int32_t getAltitudePercent(int32_t sample_mean_adc)
+/*
+ * Given the sample mean ADC return the altitude as a percentage
+ */
+int16_t getAltitudePercent(int32_t sample_mean_adc)
 {
     int32_t adc_change;
     //Checks lower boundary for ADC value
@@ -189,11 +155,14 @@ int32_t getAltitudePercent(int32_t sample_mean_adc)
     //Converts ADC to percentage
     else
     {
-        return ((adc_change * 100) / ADC_RANGE);
+        return (int16_t) ((adc_change * 100) / ADC_RANGE);
     }
 }
 
-
+/*
+ * Called by the update function when enough conversions have happened,
+ * this ensures the altitude is calibrated correctly
+ */
 void alt_calibrate(int32_t alt_raw)
 {
     g_alt_ref = alt_raw;
@@ -206,6 +175,8 @@ void alt_update(void)
     int32_t sum;
     uint16_t i;
     int32_t alt_raw;
+
+    alt_process_adc(); //Initiates a conversion
 
     // add up all the values in the circular buffer
     sum = 0;
