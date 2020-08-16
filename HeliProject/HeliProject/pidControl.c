@@ -16,13 +16,13 @@
 #include "yaw.h"
 #include "pwm.h"
 #include "utils.h"
+#include "taskDefinitions.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "FreeRTOS/include/queue.h"
 #include "FreeRTOS/include/semphr.h"
 
-#define CONTROL_RUN_FREQ 50
 #define MIN_MAIN_DUTY 20
 #define MAX_MAIN_DUTY 65
 #define MIN_TAIL_DUTY 23

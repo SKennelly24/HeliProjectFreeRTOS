@@ -45,23 +45,14 @@
 
 //Heli
 #include "altitude.h"
-//#include "config.h"
-//#include "flight_mode.h"
 #include "pwm.h"
-//#include "setpoint.h"
 #include "uart.h"
 #include "yaw.h"
 #include "utils.h"
+#include "references.h"
+#include "fsm.h"
+#include "taskDefinitions.h"
 
-/**
- * Enum for status of flight_mode
- * Finite State Machine
- */
-enum flight_mode_state_e { LANDED,
-                                  TAKE_OFF,
-                                  IN_FLIGHT,
-                                  LANDING };
-typedef enum flight_mode_state_e FlightModeState;
 
 /**
  * Define hardware settings for the UART
@@ -76,11 +67,9 @@ static const int UART_USB_GPIO_PIN_TX = GPIO_PIN_1;
 
 // buffer settings
 static const int UART_INPUT_BUFFER_SIZE = 40;   // Old implementation
-static char *g_buffer = NULL;                   // Old implementation
 
 void uart_init(void)
 {
-    g_buffer = malloc(UART_INPUT_BUFFER_SIZE);
 
     // Enable GPIO port A which is used for UART0 pins.
     SysCtlPeripheralEnable(UART_USB_PERIPH_UART);
@@ -112,48 +101,33 @@ void uart_send(const char *t_buffer)
     }
 }
 
-//moved task into main
-/*
-void uart_flight_data_update(KernelTask* t_task)
+// UART sender task
+void uart_update(void *pvParameters)
 {
-    uint16_t target_yaw = setpoint_get_yaw();
-    uint16_t actual_yaw = yaw_get();
+    //static const int UART_INPUT_BUFFER_SIZE = 40;
+    /**
+     * Buffer settings for UART
+     */
+    char g_buffer[100] = {0};        //fixed the buffer size to 40
 
-    int16_t target_altitude = setpoint_get_altitude();
-    int16_t actual_altitude = alt_get();
-    uint8_t main_rotor_duty = pwm_get_main_duty();
-    uint8_t tail_rotor_duty = pwm_get_tail_duty();
-    uint8_t operating_mode = flight_mode_get();
+    while (1) {
+            // originals commented out and modified copies for test
+            //uint16_t target_yaw = setpoint_get_yaw();
+            int16_t target_yaw = getYawReference();//get_rand_yaw();
+            //uint16_t actual_yaw = yaw_get();
+            int16_t actual_yaw = getYaw();
 
-    // format the outgoing data
-#if !CONFIG_DIRECT_CONTROL
-    usprintf(g_buffer, "Y%u\ty%u\tA%d\ta%d\tm%u\tt%u\to%u\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, main_rotor_duty, tail_rotor_duty, operating_mode);
-#else
-    usprintf(g_buffer, "y%u\ta%d\tm%u\tt%u\to%u\r\n", actual_yaw, actual_altitude, main_rotor_duty, tail_rotor_duty, operating_mode);
-#endif
-
-    // send it
-    uart_send(g_buffer);
-}
-*/
-
-
-
-/*
-void uart_kernel_data_update(KernelTask* t_task)
-{
-    uint8_t num_tasks;
-    KernelTask* kernel_tasks = kernel_get_tasks(&num_tasks);
-
-    int i;
-    for (i = 0; i < num_tasks; i++)
-    {
-        KernelTask task = kernel_tasks[i];
-        usprintf(g_buffer, "%s,%u,%u,%u\t", task.name, task.duration_micros, task.period_micros, task.frequency);
-        uart_send(g_buffer);
-
+            //int16_t target_altitude = setpoint_get_altitude();
+            int16_t target_altitude = getAltitudeReference();//(int16_t) get_rand_percent();
+            int16_t actual_altitude = (int16_t) alt_get();
+            uint8_t main_rotor_duty = pwm_get_main_duty();
+            //uint8_t main_rotor_duty = (int8_t) get_rand_percent();
+            uint8_t tail_rotor_duty = pwm_get_tail_duty();
+            //uint8_t tail_rotor_duty = (int8_t) get_rand_percent();
+            uint8_t operating_mode = getState();
+            //uint8_t operating_mode = IN_FLIGHT;
+            usprintf(g_buffer, "t_y:%d, y:%d, t_a:%d, a:%d, st:%d, m_d:%d, t_d:%d\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, operating_mode, main_rotor_duty, tail_rotor_duty);
+            uart_send(g_buffer);
+            vTaskDelay(1000 / (UART_FREQ * portTICK_RATE_MS));  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
     }
-
-    uart_send("\r\n");
 }
-*/

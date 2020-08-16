@@ -40,6 +40,9 @@ void set_yaw_target(int16_t new_yaw_target);
  */
 void set_altitude_target(uint8_t new_alt_target);
 
+/*
+ * Resets the intergrated yaw error
+ */
 void reset_yaw_error(void);
 
 #endif /* PIDCONTROL_H_ */

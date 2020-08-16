@@ -64,4 +64,10 @@ void alt_process_adc(void);
  */
 void alt_reset_calibration_state(void);
 
+/*
+ * Initiates the altitude measurement,
+ * Gets the current height
+ */
+void GetAltitude(void *pvParameters);
+
 #endif

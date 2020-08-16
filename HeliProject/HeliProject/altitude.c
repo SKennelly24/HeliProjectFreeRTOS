@@ -35,7 +35,11 @@
 #include "altitude.h"
 #include "circBuffT.h"
 #include "utils.h"
+#include "taskDefinitions.h"
 
+// RTOS
+#include "FreeRTOS.h"
+#include "task.h"
 
 #define ADC_RANGE 1241
 #define ONE_HUNDRED_PERCENT 100
@@ -211,6 +215,21 @@ void alt_reset_calibration_state(void)
 {
     g_has_been_calibrated = false;
     g_conversions = 0;
+}
+
+/*
+ * Initiates the altitude measurement,
+ * Gets the current height
+ */
+void GetAltitude(void *pvParameters)
+{
+    while (1)
+    {
+        alt_process_adc();
+        alt_update();
+        vTaskDelay(1 / (ALITUDE_MEAS_FREQ * portTICK_RATE_MS)); //  Current frequency is
+    }
+    // No way to kill this task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
 
