@@ -31,7 +31,6 @@
 
 static int16_t YAW_TARGET = 0;    // Degrees
 static uint8_t ALT_TARGET = 0;
-static bool PID_ACTIVE = false;
 typedef enum CONTROLLER_CHOICE
 {
     ALTITUDE = 0,
@@ -57,16 +56,6 @@ double pidUpdate(Controller * selectedController, double error, uint8_t controll
     control = error * selectedController->pGain
             + (selectedController->errorIntegrated * selectedController->iGain);
     return control;
-}
-
-void set_PID_ON(void)
-{
-    PID_ACTIVE = true;
-}
-
-void set_PID_OFF(void)
-{
-    PID_ACTIVE = false;
 }
 
 void set_altitude_target(uint8_t new_alt_target)
@@ -112,13 +101,16 @@ void apply_control(void *pvParameters)
 
     while(1)
     {
-        if (PID_ACTIVE)
-        {
-            setAltitudeDuty();
-            setYawDuty();
-        }
+
+        setAltitudeDuty();
+        setYawDuty();
         vTaskDelay(1000 / (portTICK_RATE_MS * CONTROL_RUN_FREQ));
     }
+}
+
+void reset_yaw_error(void)
+{
+    yawController.errorIntegrated = 0;
 }
 
 

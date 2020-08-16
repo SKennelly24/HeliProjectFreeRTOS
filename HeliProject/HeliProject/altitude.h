@@ -55,6 +55,10 @@ int16_t alt_get(void);
 bool alt_has_been_calibrated(void);
 
 
+/*
+ * does stuff
+ */
+void alt_process_adc(void);
 /**
  * Resets the calibration state of the altitude.
  */

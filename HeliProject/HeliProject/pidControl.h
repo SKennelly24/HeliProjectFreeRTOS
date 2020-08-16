@@ -1,12 +1,10 @@
 // *******************************************************
 // pidControl.h
 //
-// Functions to control the altitude and Yaw with a PID control on the main
-// and tail duty
+// Header file for the PID control
+// Sets the main and tail duty using a PID control
+// to get to the desired yaw and altitude
 //
-// Initially written by P.J. Bones UCECE
-//
-// Modified by
 // - Sarah Kennelly
 // - Derrick Edward
 // - Manu Hamblyn
@@ -26,12 +24,22 @@ typedef struct {
     double errorIntegrated;
 }Controller;
 
+/*
+ * Task for setting the duty of the main and tail rotor,
+ * to achieve the altitude and yaw references
+ */
 void apply_control(void *pvParameters);
 
+/*
+ * Sets the yaw target to the given value
+ */
+
 void set_yaw_target(int16_t new_yaw_target);
+/*
+ * Sets the altitude target to the given value
+ */
 void set_altitude_target(uint8_t new_alt_target);
 
-void set_PID_ON(void);
-void set_PID_OFF(void);
+void reset_yaw_error(void);
 
 #endif /* PIDCONTROL_H_ */

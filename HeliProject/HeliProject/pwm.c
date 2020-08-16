@@ -48,139 +48,44 @@
 #include "pwm.h"
 #include "utils.h"
 
-// Common PWM constants
+//General PWM defines
+#define PWM_RATE 200 //The PWM frequency for both the main and tail rotors.
+#define PWM_DIVIDER_CODE SYSCTL_PWMDIV_16 // PWM divider code for a 80 MHz system clock.
+#define PWM_DIVIDER 16 //The PWM divider for a 80 MHz system clock.
 
-/**
- * The PWM frequency for both the main and tail rotors.
- */
-static const int PWM_RATE = 200;
+//PWM configuration for the main motor
+#define PWM_MAIN_BASE PWM0_BASE //PWM Module 0
+#define PWM_MAIN_GEN PWM_GEN_3 //PWM Generator 3
+#define PWM_MAIN_OUTNUM PWM_OUT_7 //PWM output 7 (corresponds to generator 3)
+#define PWM_MAIN_OUTBIT PWM_OUT_7_BIT //PWM Output 7
+#define PWM_MAIN_PERIPH_PWM SYSCTL_PERIPH_PWM0 //PWM peripheral module 0
+#define PWM_MAIN_PERIPH_GPIO SYSCTL_PERIPH_GPIOC //PWM GPIO peripheral 0
+#define PWM_MAIN_GPIO_BASE GPIO_PORTC_BASE //PWM GPIO Port C
+#define PWM_MAIN_GPIO_CONFIG GPIO_PC5_M0PWM7 //PWM GPIO Config for PC5 Module 0 PWM 7
+#define PWM_MAIN_GPIO_PIN GPIO_PIN_5 //PWM GPIO Pin 5
 
-/**
- * The PWM divider code for a 80 MHz system clock.
- * Was 8 for 40MHz clock
- */
-static const int PWM_DIVIDER_CODE = SYSCTL_PWMDIV_16;
+//PWM configuration for the tail rotor
+#define PWM_TAIL_BASE PWM1_BASE //PWM Module 1
+#define PWM_TAIL_GEN PWM_GEN_2 //PWM Generator 2
+#define PWM_TAIL_OUTNUM PWM_OUT_5 //PWM output 5 for generator 2
+#define PWM_TAIL_OUTBIT PWM_OUT_5_BIT //PWM output bit 5 for generator 2
+#define PWM_TAIL_PERIPH_PWM SYSCTL_PERIPH_PWM1 //PWM peripheral for PWM 1
+#define PWM_TAIL_PERIPH_GPIO SYSCTL_PERIPH_GPIOF //PWM peripheral GPIO base F
+#define PWM_TAIL_GPIO_BASE GPIO_PORTF_BASE //PWM GPIO base F
+#define PWM_TAIL_GPIO_CONFIG GPIO_PF1_M1PWM5 //PWM module 1, pwm 5
+#define PWM_TAIL_GPIO_PIN GPIO_PIN_1 //GPIO pin 1
 
-/**
- * The PWM divider for a 80 MHz system clock.
- * Was 8 for 40MHz clock
- */
-static const int PWM_DIVIDER = 16;
 
-// PWM Configuration for the main motor
-// PWM Hardware Details: M0PWM7 (gen 3), PC5, J4-05
-
-/**
- * PWM Module 0
- */
-static const int PWM_MAIN_BASE = PWM0_BASE;
-
-/**
- * PWM Generator 3
- */
-static const int PWM_MAIN_GEN = PWM_GEN_3;
-
-/**
- * PWM output 7 (corresponds to generator 3)
- */
-static const int PWM_MAIN_OUTNUM = PWM_OUT_7;
-
-/**
- * PWM output 7
- */
-static const int PWM_MAIN_OUTBIT = PWM_OUT_7_BIT;
-
-/**
- * PWM peripheral module 0
- */
-static const uint32_t PWM_MAIN_PERIPH_PWM = SYSCTL_PERIPH_PWM0;
-
-/**
- * PWM GPIO peripheral 0
- */
-static const uint32_t PWM_MAIN_PERIPH_GPIO = SYSCTL_PERIPH_GPIOC;
-
-/**
- * PWM GPIO Port C
- */
-static const int PWM_MAIN_GPIO_BASE = GPIO_PORTC_BASE;
-
-/**
- * PWM GPIO Config for PC5 Module 0 PWM 7
- */
-static const int PWM_MAIN_GPIO_CONFIG = GPIO_PC5_M0PWM7;
-
-/**
- * PWM GPIO Pin 5
- */
-static const int PWM_MAIN_GPIO_PIN = GPIO_PIN_5;
-
-// PWM Configuration for tail motor
-//  PWM Hardware Details M1PWM5, generator 5, PF1, J3-10
-
-/**
- * PWM Module 1
- */
-static const int PWM_TAIL_BASE = PWM1_BASE;
-
-/**
- * PWM Generator 2
- */
-static const int PWM_TAIL_GEN = PWM_GEN_2;
-
-/**
- * PWM output 5 for generator 2
- */
-static const int PWM_TAIL_OUTNUM = PWM_OUT_5;
-
-/**
- * PWM output bit 5 for generator 2
- */
-static const int PWM_TAIL_OUTBIT = PWM_OUT_5_BIT;
-
-/**
- * PWM peripheral for PWM 1
- */
-static const uint32_t PWM_TAIL_PERIPH_PWM = SYSCTL_PERIPH_PWM1;
-
-/**
- * PWM peripheral GPIO base F
- */
-static const uint32_t PWM_TAIL_PERIPH_GPIO = SYSCTL_PERIPH_GPIOF;
-
-/**
- * PWM GPIO base F
- */
-static const int PWM_TAIL_GPIO_BASE = GPIO_PORTF_BASE;
-
-/**
- * PWM module 1, pwm 5
- */
-static const int PWM_TAIL_GPIO_CONFIG = GPIO_PF1_M1PWM5;
-
-/**
- * GPIO pin 1
- */
-static const int PWM_TAIL_GPIO_PIN = GPIO_PIN_1;
-
-/**
- * Stores the current duty cycle for the main rotor.
- */
-static int8_t g_main_duty;
-
-/**
- * Stores the current duty cycle for the tail rotor.
- */
-static int8_t g_tail_duty;
-
-/**
- * Stores the PWM period. This is used for some duty cycle calculations.
- */
-static uint32_t g_pwm_period;
+static int8_t g_main_duty; //Stores the current duty cycle for the main rotor.
+static int8_t g_tail_duty; //Stores the current duty cycle for the tail rotor.
+static uint32_t g_pwm_period; // Stores the PWM period. This is used for some duty cycle calculations.
 
 
 //-------------------------------------------------------------------------------
 
+/*
+ * Initialises the tail and main PWM
+ */
 void pwm_init(void)
 {
     // setup the PWM period. It is based on the system clock
@@ -220,28 +125,35 @@ void pwm_init(void)
     PWMOutputState(PWM_TAIL_BASE, PWM_TAIL_OUTBIT, true);
 }
 
-
+/*
+ * Sets up the main duty to the given value
+ */
 void pwm_set_main_duty(int8_t t_duty)
 {
     g_main_duty = clamp(t_duty, 0, 100);
     PWMPulseWidthSet(PWM_MAIN_BASE, PWM_MAIN_OUTNUM,g_pwm_period * g_main_duty / 100);
 }
 
-
+/*
+ * Returns the current PWM duty
+ */
 int8_t pwm_get_main_duty(void)
 {
     return g_main_duty;
-    //return get_rand_percent();    // Test only
 }
 
-
+/*
+ * Sets the tail duty to the given value
+ */
 void pwm_set_tail_duty(int8_t t_duty)
 {
     g_tail_duty = clamp(t_duty, 0, 100);
     PWMPulseWidthSet(PWM_TAIL_BASE, PWM_TAIL_OUTNUM,g_pwm_period * g_tail_duty / 100);
 }
 
-
+/*
+ * Returns the current PWM duty
+ */
 int8_t pwm_get_tail_duty(void)
 {
     return g_tail_duty;

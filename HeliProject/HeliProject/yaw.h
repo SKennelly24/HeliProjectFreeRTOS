@@ -30,10 +30,9 @@
 void initYaw(void);
 
 /*
- *
+ *Returns the yaw in 0-360 degrees
  */
 int16_t getYaw(void);
-// @return  Current heli yaw in +/- degrees from reference point
 
 /*
  * Returns true if the yaw has been calibrated and false otherwise

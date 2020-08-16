@@ -20,10 +20,7 @@
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
 
-/**
- * Bytecode for rendering degree symbol on the display
- */
-#define DISP_SYMBOL_DEGREES 0x60;
+#define DISP_SYMBOL_DEGREES 0x60 //Bytecode for rendering degree symbol on the display
 
 #include <stdint.h>
 //#include "kernel.h" // kernel not needed using RTOS

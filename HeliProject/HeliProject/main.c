@@ -101,6 +101,8 @@ static uint8_t g_rightTimerFinished = NOT_STARTED;
 static TimerHandle_t upTimer;
 static TimerHandle_t rightTimer;
 
+TaskHandle_t PIDTaskHandle;
+
 //0 no timer started, 1 timer started not finished yet, 2 timer started and finished need to queue button
 
 /***********************************Prototypes*****************************************/
@@ -246,6 +248,7 @@ void GetAltitude(void *pvParameters)
 {
     while (1)
     {
+        alt_process_adc();
         alt_update();
         vTaskDelay(1 / (ALITUDE_MEAS_FREQ * portTICK_RATE_MS)); //  Current frequency is
     }
@@ -509,6 +512,7 @@ void spin360(void)
         targets_acquired++;
     } else if ((firstYaw == g_yawReference) && yawInSettleRange(currentYaw))
     {
+           reset_yaw_error();
            changeState(FLYING);
     } else if ((targets_acquired == 3) && yawInSettleRange(currentYaw)) {
         setYawReference(firstYaw);
@@ -535,7 +539,7 @@ void TakeOffSequence(void)
     }
     else if (yaw_has_been_calibrated() && alt_has_been_calibrated()) //Check if yaw and reference is calibrated
     {
-        set_PID_ON();               //
+        vTaskResume(PIDTaskHandle);
         setAltitudeReference(10);   //
         setYawReference(0);
     }
@@ -543,10 +547,14 @@ void TakeOffSequence(void)
     {
         //Set the rotors to move so it can find the yaw reference
         //Suggest pwm_main = % and tail = %
+        vTaskSuspend(PIDTaskHandle);
         pwm_set_main_duty(25); //15
         pwm_set_tail_duty(5); //33
+
     }
 }
+
+
 
 /*
  * Set the altitude and yaw references to 0,
@@ -557,10 +565,9 @@ void LandingSequence(void)
     if (alt_get() == 0 && getYaw() == 0)
     {
         changeState(LANDED);
-        set_PID_OFF();
+        vTaskSuspend(PIDTaskHandle);
         pwm_set_main_duty(0);
         pwm_set_tail_duty(0);
-        //
     }
     else
     {
@@ -568,7 +575,6 @@ void LandingSequence(void)
         setYawReference(0);
     }
 }
-
 
 /*
  * The task for the FSM
@@ -586,7 +592,7 @@ void flight_mode_FSM(void *pvParameters)
             LandingSequence();
             break;
         case (FLYING):
-            set_PID_ON(); //flight controls active!
+            vTaskResume(PIDTaskHandle);
             break;
         case (LANDED):
             //Reset calibration on yaw and altitude
@@ -594,7 +600,7 @@ void flight_mode_FSM(void *pvParameters)
             yaw_reset_calibration_state();
 
             //Turn off PID and set the pwm_main and pwm_tail duty to zero
-            set_PID_OFF();
+            vTaskSuspend(PIDTaskHandle);
             pwm_set_main_duty(0);
             pwm_set_tail_duty(0);
             break;
@@ -638,7 +644,7 @@ void createTasks(void)
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(apply_control, "PID", 128, NULL, 4, NULL))
+    if (pdTRUE!= xTaskCreate(apply_control, "PID", 128, NULL, 4, &PIDTaskHandle))
     {
        while (1);   // Oh no! Must not have had enough memory to create the task.
     }

@@ -61,12 +61,13 @@ int A_B = NULL;
 int32_t YAW = 0;
 int32_t g_referenceYaw;
 static bool g_has_been_calibrated = false;
-// ************************* GLOBALS *****************************************
+// *************************Prototypes *****************************************
 void QDIntHandler(void);
 // ********************** QUADRATURE DECODING FUNCTIONS **********************
-//
-// Interrupt for to check if the helicopter has found the zero yaw reference
-//
+
+/*
+ * Interrupt for to check if the helicopter has found the zero yaw reference
+ */
 void referenceInterrupt(void)
 {
     if (!g_has_been_calibrated) {
@@ -119,13 +120,6 @@ void initQuadratureGPIO(void)
 
 }
 
-//No idea what this is trying to do
-void yaw_calibrate(int32_t yaw_raw)
-{
-    YAW = yaw_raw;
-    g_has_been_calibrated = true;
-}
-
 
 void initYaw(void)
 {
@@ -134,7 +128,9 @@ void initYaw(void)
 }
 
 
-/* Calculates the current state */
+/*
+ * Calculates the current pin state
+ */
 int currentQuad(void)
 {
     return GPIOPinRead(PHASE_AB_PORT_BASE, PHASE_A_PIN)
@@ -216,7 +212,7 @@ void QDIntHandler(void)
 
 
 /*
- * Calculates yaw in degrees from slots in yaw disc
+ * Returns yaw in degrees (0-360) from slots in yaw disc
  */
 int16_t getYaw(void)
 {
@@ -229,11 +225,16 @@ int16_t getYaw(void)
     return yawDeg;
 }
 
+/*
+ * Returns whether the yaw has been calibrated
+ */
 bool yaw_has_been_calibrated(void)
 {
     return g_has_been_calibrated;
 }
-
+/*
+ * Resets calibration state so yaw reference has to be found again
+ */
 void yaw_reset_calibration_state(void)
 {
     g_has_been_calibrated = false;

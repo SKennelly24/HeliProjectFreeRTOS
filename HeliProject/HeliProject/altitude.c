@@ -176,8 +176,6 @@ void alt_update(void)
     uint16_t i;
     int32_t alt_raw;
 
-    alt_process_adc(); //Initiates a conversion
-
     // add up all the values in the circular buffer
     sum = 0;
 
