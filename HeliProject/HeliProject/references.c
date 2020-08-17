@@ -65,7 +65,6 @@ void setAltitudeReference(int32_t new_altitude)
     if (xSemaphoreTake(g_altitudeMutex, (TickType_t) 10) == true) //Take mutex
     {
         g_altitudeReference = new_altitude;
-        set_altitude_target( (uint8_t) g_altitudeReference);
         xSemaphoreGive(g_altitudeMutex); //give mutex
     }
     //Set control -> altitude reference
@@ -81,7 +80,6 @@ bool setYawReference(int16_t new_yaw)
     if (xSemaphoreTake(g_yawMutex, (TickType_t) 10) == true) //Take mutex
     {
         g_yawReference = new_yaw;
-        set_yaw_target( (int16_t) g_yawReference);
         xSemaphoreGive(g_yawMutex); //give mutex
         worked = true;
     } else {

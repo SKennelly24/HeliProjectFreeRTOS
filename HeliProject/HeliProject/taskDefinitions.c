@@ -44,42 +44,52 @@
 
 TaskHandle_t PIDTaskHandle; //Hold handle so task can be resumed and suspended
 
+#define PID_CONTROL_PRIORITY 4
+
+#define QUEUE_BUTTON_PRIORITY 4
+#define MEAS_ALTITUDE_PRIORITY 4
+
+#define FSM_PRIORITY 4
+#define CHECK_QUEUE_PRIORITY 4
+
+#define UART_PRIORITY 4
+#define DISPLAY_PRIORITY 4
 /*
  * Creates all the FREERTOS tasks
  */
 void createTasks(void)
 {
-    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 128, NULL, 4, NULL))
+    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 128, NULL, MEAS_ALTITUDE_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 128, NULL, 4, NULL))
+    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 128, NULL, DISPLAY_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE != xTaskCreate(uart_update, "UART send", 128, NULL, 4, NULL))
+    if (pdTRUE != xTaskCreate(uart_update, "UART send", 128, NULL, UART_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(QueueButtonPushes, "Queue Button Pushes", 128, NULL, 4, NULL))
+    if (pdTRUE!= xTaskCreate(QueueButtonPushes, "Queue Button Pushes", 128, NULL, QUEUE_BUTTON_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(CheckButtonQueue, "Check Button Queue", 128, NULL, 4, NULL))
+    if (pdTRUE!= xTaskCreate(CheckButtonQueue, "Check Button Queue", 128, NULL, CHECK_QUEUE_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(apply_control, "PID", 128, NULL, 4, &PIDTaskHandle))
+    if (pdTRUE!= xTaskCreate(apply_control, "PID", 128, NULL, PID_CONTROL_PRIORITY, &PIDTaskHandle))
     {
        while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(flight_mode_FSM, "FSM", 128, NULL, 4, NULL))
+    if (pdTRUE!= xTaskCreate(flight_mode_FSM, "FSM", 128, NULL, FSM_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }

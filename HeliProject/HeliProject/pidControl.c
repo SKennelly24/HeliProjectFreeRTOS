@@ -29,8 +29,6 @@
 #define MAX_TAIL_DUTY 70
 #define MAX_YAW 360
 
-static int16_t YAW_TARGET = 0;    // Degrees
-static uint8_t ALT_TARGET = 0;
 typedef enum CONTROLLER_CHOICE
 {
     ALTITUDE = 0,
@@ -58,15 +56,6 @@ double pidUpdate(Controller * selectedController, double error, uint8_t controll
     return control;
 }
 
-void set_altitude_target(uint8_t new_alt_target)
-{
-    ALT_TARGET = new_alt_target;
-}
-
-void set_yaw_target(int16_t new_yaw_target)
-{
-    YAW_TARGET = new_yaw_target;
-}
 
 void setAltitudeDuty(void)
 {
@@ -74,7 +63,7 @@ void setAltitudeDuty(void)
     int16_t control;
     int16_t newDuty;
 
-    altitudeError = ALT_TARGET - alt_get();
+    altitudeError = getAltitudeReference() - alt_get();
     control = (int16_t) pidUpdate(&altitudeController, altitudeError, ALTITUDE);
     newDuty = clamp(control, MIN_MAIN_DUTY, MAX_MAIN_DUTY);
     pwm_set_main_duty(newDuty);
@@ -86,7 +75,7 @@ void setAltitudeDuty(void)
      int16_t control;
      int16_t newDuty;
 
-      yawError = YAW_TARGET - getYaw();
+      yawError = getYawReference() - getYaw();
       if ((abs(yawError) > (MAX_YAW /2))) {
           yawError = copysign(MAX_YAW - abs(yawError), -yawError);
       }
