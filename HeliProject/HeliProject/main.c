@@ -38,6 +38,7 @@
 #include "buttonTasks.h"
 #include "fsm.h"
 #include "taskDefinitions.h"
+#include "references.h"
 
 // RTOS
 #include "FreeRTOS.h"

@@ -44,16 +44,6 @@
 
 TaskHandle_t PIDTaskHandle; //Hold handle so task can be resumed and suspended
 
-#define PID_CONTROL_PRIORITY 4
-
-#define QUEUE_BUTTON_PRIORITY 4
-#define MEAS_ALTITUDE_PRIORITY 4
-
-#define FSM_PRIORITY 4
-#define CHECK_QUEUE_PRIORITY 4
-
-#define UART_PRIORITY 4
-#define DISPLAY_PRIORITY 4
 /*
  * Creates all the FREERTOS tasks
  */

@@ -32,6 +32,8 @@
 #include "references.h"
 #include "fsm.h"
 #include "taskDefinitions.h"
+#include "pidControl.h"
+#include "altitude.h"
 
 // RTOS
 #include "FreeRTOS.h"
@@ -97,8 +99,8 @@ bool yawInSettleRange(int16_t currentYaw)
 /*
  * Sets the yaw reference to next spin target
  */
-void setSpinTarget(currentYaw) {
-    int16_t target = currentYaw + 90;
+void setSpinTarget(int16_t currentYaw, int16_t add_amount) {
+    int16_t target = currentYaw + add_amount;
     if (target > -1 && target < 360)
     {
         setYawReference(target);
@@ -125,18 +127,19 @@ void spin360(void)
     if (targets_acquired == 0)
     {
         firstYaw = yawReference;
-        setSpinTarget(firstYaw);
+        setSpinTarget(firstYaw, 75);
         targets_acquired++;
     } else if ((firstYaw == yawReference) && yawInSettleRange(currentYaw))
     {
            reset_yaw_error();
            changeState(FLYING);
+           targets_acquired = 0;
     } else if ((targets_acquired == 3) && yawInSettleRange(currentYaw)) {
         setYawReference(firstYaw);
     }
     else if ((targets_acquired < 4) && yawInSettleRange(currentYaw))
     {
-        setSpinTarget(yawReference);
+        setSpinTarget(yawReference, 90);
         targets_acquired++;
     }
 }

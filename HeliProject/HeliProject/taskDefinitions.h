@@ -13,13 +13,13 @@
 #define TASKDEFINITIONS_H_
 
 //Frequencies of tasks
+#define ALITUDE_MEAS_FREQ 50
+#define CONTROL_RUN_FREQ 50
+#define FSM_FREQ 20
 #define BUTTON_QUEUE_FREQ 25
 #define CHECK_QUEUE_FREQ 10
-#define ALITUDE_MEAS_FREQ 10
-#define CONTROL_RUN_FREQ 50
-#define UART_FREQ 5
-#define FSM_FREQ 50
-#define DISPLAY_FREQ 5
+#define UART_FREQ 4
+#define DISPLAY_FREQ 1
 
 //Priority of tasks
 #define QUEUE_BUTTON_PRIORITY 4

@@ -35,6 +35,7 @@
 #include "fsm.h"
 #include "altitude.h"
 #include "taskDefinitions.h"
+#include "references.h"
 
 // RTOS
 #include "FreeRTOS.h"
@@ -167,8 +168,8 @@ void StartTimer(TimerHandle_t * startTimer, SemaphoreHandle_t * timerMutex, uint
 void ChangeUpButtonState(void)
 {
     if ((g_upTimerFinished == NOT_FINISHED)) {
-        setAltitudeReference(MAX_HEIGHT / 2);
         ChangeTimerState(NOT_STARTED, &g_upTimerMutex, &g_upTimerFinished);
+        setAltitudeReference(MAX_HEIGHT / 2);
     } else {
         QueueButton(UP);
         StartTimer(&upTimer, &g_upTimerMutex, &g_upTimerFinished);
@@ -183,8 +184,8 @@ void ChangeUpButtonState(void)
 void ChangeRightButtonState(void)
 {
     if ((g_rightTimerFinished == NOT_FINISHED)) {
-        changeState(SPIN_360);
         ChangeTimerState(NOT_STARTED, &g_rightTimerMutex, &g_rightTimerFinished);
+        changeState(SPIN_360);
     } else {
         QueueButton(RIGHT);
         StartTimer(&rightTimer, &g_rightTimerMutex, &g_rightTimerFinished);

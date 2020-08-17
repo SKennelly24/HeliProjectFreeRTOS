@@ -65,9 +65,6 @@ static const int UART_USB_GPIO_BASE = GPIO_PORTA_BASE;
 static const int UART_USB_GPIO_PIN_RX = GPIO_PIN_0;
 static const int UART_USB_GPIO_PIN_TX = GPIO_PIN_1;
 
-// buffer settings
-static const int UART_INPUT_BUFFER_SIZE = 40;   // Old implementation
-
 void uart_init(void)
 {
 

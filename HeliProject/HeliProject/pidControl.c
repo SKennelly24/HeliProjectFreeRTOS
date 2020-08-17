@@ -17,6 +17,7 @@
 #include "pwm.h"
 #include "utils.h"
 #include "taskDefinitions.h"
+#include "references.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
