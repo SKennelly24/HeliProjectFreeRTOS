@@ -173,9 +173,8 @@ void TakeOffSequence(void)
         //Set the rotors to move so it can find the yaw reference
         //Suggest pwm_main = % and tail = %
         suspendPIDTask();
-        // Rig 3 & 4
-        pwm_set_main_duty(25); //15
-        pwm_set_tail_duty(5); //33
+        pwm_set_main_duty(15);      // R1 15, R2 6, R3 25, R4 25
+        pwm_set_tail_duty(5);       // R1 5, R2 32, R3 5, R4 5
 
     }
 }

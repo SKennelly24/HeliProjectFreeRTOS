@@ -73,26 +73,26 @@ typedef enum CONTROLLER_CHOICE
     YAW,
 } CONTROLLER_CHOICE;
 
-// *************************************************************
-// Proportional and Integral gains.
-// (These are either a compromise to work on all (most) rigs or
-// Specifically adjusted for a particular rig.)
+ // *************************************************************
+ // Proportional and Integral gains.
+ // (These are either a compromise to work on all (most) rigs or
+ // Specifically adjusted for a particular rig.)
 
 /*
-* Proportional and Integral gains for altitude PI control
-*/
+ * Proportional and Integral gains for altitude PI control
+ */
 static Controller altitudeController = {
-                                       .pGain = 0.20, //R1 .20, R2 .07, R3 .39
-                                       .iGain = 0.22, //R1 .22, R2 .18, R3 .25
-                                       .errorIntegrated = 100.0
+                                        .pGain = 0.20, //R1 .20, R2 .07, R3 .39
+                                        .iGain = 0.22, //R1 .22, R2 .18, R3 .25
+                                        .errorIntegrated = 100.0
 };
 /*
-* Proportional and Integral gains for yaw PI control
-*/
+ * Proportional and Integral gains for yaw PI control
+ */
 static Controller yawController = {
-                                       .pGain = 0.41, //R1 .41, R2 .45, R3 .51
-                                       .iGain = 0.23, //R1 .23, R2 .45, R3 .25
-                                       .errorIntegrated = 0.0
+                                        .pGain = 0.41, //R1 .41, R2 .45, R3 .51
+                                        .iGain = 0.23, //R1 .23, R2 .45, R3 .25
+                                        .errorIntegrated = 0.0
 };
 // *************************************************************
 
