@@ -125,17 +125,17 @@ void uart_update(void *pvParameters)
             //uint8_t tail_rotor_duty = (int8_t) get_rand_percent();
             uint8_t operating_mode = getState();
             //uint8_t operating_mode = IN_FLIGHT;
-            //usprintf(g_buffer, "t_y:%d, y:%d, t_a:%d, a:%d, st:%d, m_d:%d, t_d:%d\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, operating_mode, main_rotor_duty, tail_rotor_duty);
-            //uart_send(g_buffer);
+            usprintf(g_buffer, "t_y:%d, y:%d, t_a:%d, a:%d, st:%d, m_d:%d, t_d:%d\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, operating_mode, main_rotor_duty, tail_rotor_duty);
+            uart_send(g_buffer);
 
             //Send the runtime stats
-            if (count > 4)
-            {
-                char runtime_stats_buffer[512];
-                vTaskGetRunTimeStats(runtime_stats_buffer);
-                uart_send(runtime_stats_buffer);
-                count = 0;
-            }
+//            if (count > 4)
+//            {
+//                char runtime_stats_buffer[512];
+//                vTaskGetRunTimeStats(runtime_stats_buffer);
+//                uart_send(runtime_stats_buffer);
+//                count = 0;
+//            }
             vTaskDelay(1000 / (UART_FREQ * portTICK_RATE_MS));  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
     }
 }
