@@ -20,6 +20,7 @@
 #define CHECK_QUEUE_FREQ 10
 #define UART_FREQ 4
 #define DISPLAY_FREQ 1
+#define LOAD_FREQ 0.2
 
 //Priority of tasks
 #define QUEUE_BUTTON_PRIORITY 4
@@ -29,6 +30,7 @@
 #define UART_PRIORITY 4
 #define FSM_PRIORITY 4
 #define DISPLAY_PRIORITY 4
+
 
 /*
  * Creates all the tasks for FreeRTOS

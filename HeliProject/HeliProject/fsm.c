@@ -34,6 +34,7 @@
 #include "taskDefinitions.h"
 #include "pidControl.h"
 #include "altitude.h"
+#include "uart.h"
 
 // RTOS
 #include "FreeRTOS.h"

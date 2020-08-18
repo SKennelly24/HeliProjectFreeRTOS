@@ -44,6 +44,16 @@
 
 TaskHandle_t PIDTaskHandle; //Hold handle so task can be resumed and suspended
 
+void load_cpu_stats(void *pvParameters)
+{
+    while (1)
+    {
+        static char runtime_stats_buffer[512];
+        vTaskGetRunTimeStats(runtime_stats_buffer);
+        //printf(runtime_stats_buffer);
+        vTaskDelay(1000 / (LOAD_FREQ * portTICK_RATE_MS));
+    }
+}
 /*
  * Creates all the FREERTOS tasks
  */
@@ -59,7 +69,7 @@ void createTasks(void)
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE != xTaskCreate(uart_update, "UART send", 128, NULL, UART_PRIORITY, NULL))
+    if (pdTRUE != xTaskCreate(uart_update, "UART send", 512, NULL, UART_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
@@ -84,7 +94,14 @@ void createTasks(void)
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
+    /*if (pdTRUE!= xTaskCreate(load_cpu_stats, "CPU_LOAD_STATS", 128, NULL, 4, NULL))
+    {
+        while (1);   // Oh no! Must not have had enough memory to create the task.
+    }*/
+
 }
+
+
 
 void suspendPIDTask(void)
 {
