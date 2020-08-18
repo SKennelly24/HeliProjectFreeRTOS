@@ -2,6 +2,13 @@
  *
  * altitude.c
  *
+ * Modified for ENCE464-20S2 Group 18
+ * 2020_07_28 by:
+ *  - Derrick Edward
+ *  - Sarah Kennelley
+ *  - Manu Hamblyn
+ *
+ *-------------------------------------------------------------------------------
  * ENEL361 Helicopter Project
  * Friday Morning, Group 7
  *
@@ -10,11 +17,6 @@
  *  - Will Cowper
  *  - Jesse Sheehan
  *
- *  Modified by:
- *  - Manu Hamblyn
- *  - Sarah Kennelly
- *  - Derrick Edward
- *
  * Description:
  * This module contains functionality required for calculating the mean altitude
  * as a raw value and as a percentage of the overall height.
@@ -22,38 +24,42 @@
  * the altitude values.
  *
  ******************************************************************************/
-
+// Standard modules
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <limits.h>
 
+// Tiva / M4 modules
 #include "inc/hw_memmap.h"
 #include "driverlib/adc.h"
 #include "driverlib/sysctl.h"
 
+// Heli modules
 #include "altitude.h"
 #include "circBuffT.h"
 #include "utils.h"
 #include "taskDefinitions.h"
 
-// RTOS
+// RTOS modules
 #include "FreeRTOS.h"
 #include "task.h"
 
+// Some default settings
 #define ADC_RANGE 1241
 #define ONE_HUNDRED_PERCENT 100
-#define ALT_BUF_SIZE 16 //The size of the buffer used to store the raw ADC values
+#define ALT_BUF_SIZE 16         // Size of the buffer used to store the raw ADC values
 #define ADC_BASE ADC0_BASE
 #define ADC_PERIPH SYSCTL_PERIPH_ADC0
 #define ADC_SEQUENCE 3
 #define ADC_STEP 0
 
-static circBuf_t g_circ_buffer; // The circular buffer used to store the raw ADC values for calculating the mean.
-static uint16_t g_alt_ref; //The reference altitude. This is required for calculating the altitude as a percentage.
-static int16_t g_alt_percent; //The mean altitude as a percentage of full height. This is updated when the `void alt_update()` function is called.
-static bool g_has_been_calibrated = false; //Indicates if the altitude has been calibrated yet.
-static int16_t g_conversions = 0; //Counter to hold the amount of adc conversions
+// Variable definition
+static circBuf_t g_circ_buffer; // Circular buffer used to store the raw ADC values for calculating the mean.
+static uint16_t g_alt_ref;      // Reference altitude. Required for calculating the altitude as a percentage.
+static int16_t g_alt_percent;   // Mean altitude as a percentage of full height. Updated when the `void alt_update()` function is called.
+static bool g_has_been_calibrated = false;  // Indicates if the altitude has been calibrated.
+static int16_t g_conversions = 0;           // Counter to hold the amount of adc conversions
 
 
 /**
@@ -111,7 +117,6 @@ void alt_init_adc(void)
     // Enable interrupts for ADC0 sequence 3 (clears any outstanding interrupts)
     ADCIntEnable(ADC_BASE, ADC_SEQUENCE);
 }
-
 
 /**
  * (Original code by P.J. Bones)

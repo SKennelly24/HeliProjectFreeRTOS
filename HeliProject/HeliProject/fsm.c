@@ -6,7 +6,8 @@
  * Sarah Kennelley
  * Manu Hamblyn
  *
- * Provides the helper functions and task for the FSM
+ *------------------------------------------------------------
+ * Implements helper functions and tasks for the FSM
  */
 
 #include <stdbool.h>
@@ -35,7 +36,7 @@
 #include "pidControl.h"
 #include "altitude.h"
 
-// RTOS
+// RTOS modules
 #include "FreeRTOS.h"
 #include "task.h"
 #include "FreeRTOS/include/queue.h"
@@ -46,7 +47,7 @@
 #define YAW_SETTLE_RANGE 10
 
 static SemaphoreHandle_t g_changeStateMutex;
-static int8_t g_heliState = LANDED;
+static int8_t g_heliState = LANDED;         //Set LANDED on initialisation
 
 /***********************************Getter and setter for state******************************/
 /*
@@ -61,6 +62,9 @@ void changeState(int8_t state_num)
     }
 }
 
+/*
+ * Returns the current state of the FSM
+ */
 uint8_t getState(void)
 {
     return g_heliState;
@@ -168,6 +172,7 @@ void TakeOffSequence(void)
         //Set the rotors to move so it can find the yaw reference
         //Suggest pwm_main = % and tail = %
         suspendPIDTask();
+        // Rig 3 & 4
         pwm_set_main_duty(25); //15
         pwm_set_tail_duty(5); //33
 
@@ -175,10 +180,9 @@ void TakeOffSequence(void)
 }
 
 
-
 /*
- * Set the altitude and yaw references to 0,
- * If they are met turn off the main and tail motors
+ * Set the altitude and yaw references to zero duty,
+ * If they are met turn off main and tail rotors
  */
 void LandingSequence(void)
 {

@@ -30,10 +30,11 @@
 #include "FreeRTOS/include/semphr.h"
 
 // Main and Tail duty limits
+//Rig 3
 #define MIN_MAIN_DUTY 20
 #define MAX_MAIN_DUTY 65
-#define MIN_TAIL_DUTY 23
-#define MAX_TAIL_DUTY 70
+#define MIN_TAIL_DUTY 18
+#define MAX_TAIL_DUTY 65
 #define MAX_YAW 360
 
 /*
@@ -54,8 +55,8 @@ typedef enum CONTROLLER_CHOICE
  * Proportional and Integral gains for altitude PI control
  */
 static Controller altitudeController = {
-                                        .pGain = 0.6,
-                                        .iGain = 0.4,
+                                        .pGain = 0.39,
+                                        .iGain = 0.25,
                                         .errorIntegrated = 100.0
 };
 /*
@@ -83,7 +84,7 @@ double pidUpdate(Controller * selectedController, double error, uint8_t controll
 }
 
 /* Calculates error in (between current and desired) altitude and
- * passes the value to PI control.
+ * calls PI control with this value.
  * Clamps the new duty (from PI control) within system limits and
  * sets the altitude PWM module value accordingly.
 */
@@ -101,7 +102,7 @@ void setAltitudeDuty(void)
 
 /*
  * Calculates error in (between current and desired) yaw and
- * passes the value to PI control.
+ * calls PI control with this value..
  * Clamps the new duty (from PI control) within system limits and
  * sets the yaw PWM module value accordingly.
  */
