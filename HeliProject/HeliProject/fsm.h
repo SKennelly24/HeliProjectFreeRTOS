@@ -6,7 +6,8 @@
  * Sarah Kennelley
  * Manu Hamblyn
  *
- * Provides the helper functions and task for the FSM
+ *-------------------------------------------------------------
+ * Provides the helper function and task prototypes for the FSM
  */
 
 #ifndef FSM_H_
@@ -15,7 +16,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-
+/*
+ * Definitions for the possible heli states
+ */
 typedef enum HELI_STATE
 {
     LANDED = 0,
@@ -37,12 +40,12 @@ void initFSM(void);
 void changeState(int8_t state_num);
 
 /*
- * Returns the current state
+ * Returns the current state of the FSM
  */
 uint8_t getState(void);
 
 /*
- * FSM task
+ * FSM (Free RTOS) task
  */
 void flight_mode_FSM(void *pvParameters);
 

@@ -4,11 +4,15 @@
  * Sarah Kennelley
  * Manu Hamblyn
  *
- * Controls the helicopter
- *
- * based on Simple LED blinking example for the Tiva Launchpad
+ *----------------------------------------------
+ * Main routine for heli control:
+ *  calls initialisation routines,
+ *  displays OLED splash screen,
+ *  starts FreeRTOS.
+ * ---------------------------------------------
  */
 
+// Standard modules
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -40,7 +44,7 @@
 #include "taskDefinitions.h"
 #include "references.h"
 
-// RTOS
+// RTOS modules
 #include "FreeRTOS.h"
 #include "task.h"
 #include "FreeRTOS/include/queue.h"
@@ -62,16 +66,16 @@ void initialise(void)
     SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
     SYSCTL_XTAL_16MHZ);
 
-    //Initialisation to things for tasks
-    alt_init();     // Altitude and ADC
-    disp_init();    // Display
-    uart_init();    // UART
-    pwm_init();     // PWM (overwrites LED)
-    initButtonTasks();
-    initButtons();
-    initFSM();
-    initYaw();
-    initReferences();
+    //Initialisation things for tasks
+    alt_init();         // Altitude and ADC
+    disp_init();        // Display
+    uart_init();        // UART
+    pwm_init();         // PWM (overwrites LED)
+    initButtonTasks();  //
+    initButtons();      //
+    initFSM();          // Finite state machine
+    initYaw();          // Yaw system (state machine, counters, zero reference)
+    initReferences();   // Set up Altitude, Yaw, Button & Queue references
 
     // Enable interrupts to the processor.
     IntMasterEnable();

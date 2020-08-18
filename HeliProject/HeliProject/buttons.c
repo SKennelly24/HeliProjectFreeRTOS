@@ -1,17 +1,19 @@
 // *******************************************************
 // buttons.c
 //
+// Modified for ENCE464-20S2 Group 18
+// 2020_07_28 by:
+//  - Derrick Edward
+//  - Sarah Kennelley
+//  - Manu Hamblyn
+//
+// -----------------------------------------------------------------
 // Support for a set of FOUR specific buttons on the Tiva/Orbit.
 // ENCE361 sample code.
 // The buttons are:  UP and DOWN (on the Orbit daughterboard) plus
 // LEFT and RIGHT on the Tiva.
 //
 // Initially written by P.J. Bones UCECE
-//
-// Modified by
-// - Sarah Kennelly
-// - Derrick Edward
-// - Manu Hamblyn
 //
 //*****************************************************************************
 

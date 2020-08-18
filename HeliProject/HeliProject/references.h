@@ -6,7 +6,8 @@
  * Sarah Kennelley
  * Manu Hamblyn
  *
- * Provides the function to set and get and change alittude and yaw references
+ * ---------------------------------------------------------------------------
+ * Provides the function to set and get and change altitude and yaw references
  */
 
 #ifndef REFERENCES_H_
@@ -38,8 +39,6 @@ int32_t getYawReference(void);
  * Updates the altitude and yaw references given a pressed button
  */
 void UpdateReferences(int8_t pressed_button);
-
-
 
 
 #endif /* REFERENCES_H_ */

@@ -3,6 +3,10 @@
  *
  *  Created on: 17/08/2020
  *      Author: sek40
+ *
+ * ---------------------------------------
+ * Implements the setters for changing altitude and yaw reference points and
+ * getters for retrieving the current reference points.
  */
 
 #include <stdbool.h>
@@ -30,13 +34,14 @@
 #include "pidControl.h"
 #include "altitude.h"
 
-// RTOS
+// RTOS modules
 #include "FreeRTOS.h"
 #include "task.h"
 #include "FreeRTOS/include/queue.h"
 #include "FreeRTOS/include/semphr.h"
 #include "FreeRTOS/include/timers.h"
 
+// Yaw increment for button press
 #define YAW_CHANGE 15
 
 static SemaphoreHandle_t g_altitudeMutex;
