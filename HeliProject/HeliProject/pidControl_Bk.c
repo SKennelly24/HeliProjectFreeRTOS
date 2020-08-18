@@ -3,18 +3,14 @@
  *
  *  Created on: 12/08/2020
  *  Author: sek40
- *  ----------------------------------------
- *  Implementation of PID controller
  */
 
-// General modules
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
-// Heli modules
 #include "pidControl.h"
 #include "altitude.h"
 #include "yaw.h"
@@ -23,56 +19,35 @@
 #include "taskDefinitions.h"
 #include "references.h"
 
-//Free RTOS modules
 #include "FreeRTOS.h"
 #include "task.h"
 #include "FreeRTOS/include/queue.h"
 #include "FreeRTOS/include/semphr.h"
 
-// Main and Tail duty limits
-#define MIN_MAIN_DUTY 20
-#define MAX_MAIN_DUTY 65
-#define MIN_TAIL_DUTY 23
-#define MAX_TAIL_DUTY 70
+#define MIN_MAIN_DUTY 23
+#define MAX_MAIN_DUTY 67
+#define MIN_TAIL_DUTY 18
+#define MAX_TAIL_DUTY 65
 #define MAX_YAW 360
 
-/*
- * Select YAW or ALTITIDE control
- */
 typedef enum CONTROLLER_CHOICE
 {
     ALTITUDE = 0,
     YAW,
 } CONTROLLER_CHOICE;
 
- // *************************************************************
- // Proportional and Integral gains.
- // (These are either a compromise to work on all (most) rigs or
- // Specifically adjusted for a particular rig.)
-
-/*
- * Proportional and Integral gains for altitude PI control
- */
 static Controller altitudeController = {
-                                        .pGain = 0.6,
-                                        .iGain = 0.4,
+                                        .pGain = 0.39,
+                                        .iGain = 0.25,
                                         .errorIntegrated = 100.0
 };
-/*
- * Proportional and Integral gains for yaw PI control
- */
+
 static Controller yawController = {
                                         .pGain = 0.51,
                                         .iGain = 0.25,
                                         .errorIntegrated = 0.0
 };
-// *************************************************************
 
-/*
- * Implements the PI algorithm.
- * Accepts (pointer) controller gains, (double) error value, (enum) controller_choice
- * Returns (double) calculated control value
- */
 double pidUpdate(Controller * selectedController, double error, uint8_t controller_choice) {
     double control;
     double delta_t = (double) 1 / CONTROL_RUN_FREQ;
@@ -82,11 +57,7 @@ double pidUpdate(Controller * selectedController, double error, uint8_t controll
     return control;
 }
 
-/* Calculates error in (between current and desired) altitude and
- * passes the value to PI control.
- * Clamps the new duty (from PI control) within system limits and
- * sets the altitude PWM module value accordingly.
-*/
+
 void setAltitudeDuty(void)
 {
     int16_t altitudeError;
@@ -99,12 +70,6 @@ void setAltitudeDuty(void)
     pwm_set_main_duty(newDuty);
 }
 
-/*
- * Calculates error in (between current and desired) yaw and
- * passes the value to PI control.
- * Clamps the new duty (from PI control) within system limits and
- * sets the yaw PWM module value accordingly.
- */
  void setYawDuty(void)
  {
      int16_t yawError;
@@ -121,12 +86,12 @@ void setAltitudeDuty(void)
       pwm_set_tail_duty(newDuty);
  }
 
-
 void apply_control(void *pvParameters)
 {
 
     while(1)
     {
+
         setAltitudeDuty();
         setYawDuty();
         vTaskDelay(1000 / (portTICK_RATE_MS * CONTROL_RUN_FREQ));
