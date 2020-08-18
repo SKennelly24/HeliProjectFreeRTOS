@@ -32,6 +32,7 @@
 #include "utils.h"
 #include "yaw.h"      //commented out for test
 #include "taskDefinitions.h"
+#include "uart.h"
 
 /**
  * Enum of all states the display can be in. Cycled by pressing BTN2
