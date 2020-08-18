@@ -102,12 +102,6 @@ void uart_send(const char *t_buffer)
 // UART sender task
 void uart_update(void *pvParameters)
 {
-    char g_buffer[100] = {0};        //fixed the buffer size
-
-    while (1) {
-            // modified copies for test only
-            int16_t target_yaw = getYawReference(); //get_rand_yaw();
-
     /**
      * Buffer settings for UART
      */
