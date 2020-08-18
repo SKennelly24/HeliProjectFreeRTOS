@@ -75,7 +75,7 @@
 #define PWM_TAIL_GPIO_CONFIG GPIO_PF1_M1PWM5 //PWM module 1, pwm 5
 #define PWM_TAIL_GPIO_PIN GPIO_PIN_1 //GPIO pin 1
 
-
+// Duty and Period variables
 static int8_t g_main_duty; //Stores the current duty cycle for the main rotor.
 static int8_t g_tail_duty; //Stores the current duty cycle for the tail rotor.
 static uint32_t g_pwm_period; // Stores the PWM period. This is used for some duty cycle calculations.
@@ -96,7 +96,6 @@ void pwm_init(void)
 
     // initialise the main rotor
     SysCtlPeripheralEnable(PWM_MAIN_PERIPH_PWM);
-
     while (!SysCtlPeripheralReady(PWM_MAIN_PERIPH_PWM));
     SysCtlPeripheralEnable(PWM_MAIN_PERIPH_GPIO);
 
@@ -111,7 +110,6 @@ void pwm_init(void)
 
     // initialise the tail rotor
     SysCtlPeripheralEnable(PWM_TAIL_PERIPH_PWM);
-
     while (!SysCtlPeripheralReady(PWM_TAIL_PERIPH_PWM));
     SysCtlPeripheralEnable(PWM_TAIL_PERIPH_GPIO);
 

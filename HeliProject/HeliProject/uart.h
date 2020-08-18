@@ -31,8 +31,6 @@
 
 #include <stdint.h>
 
-//#include "kernel.h"
-
 /**
  * (Original Code by P.J. Bones)
  * initialiseUSB_UART - 8 bits, 1 stop bit, no parity
@@ -46,15 +44,7 @@ void uart_init(void);
 void uart_send(const char *t_buffer);
 
 /**
- * Transmits the helicopter status via UART.
- */
-//void uart_flight_data_update(KernelTask* t_task);
-/**
- * Transmits the kernel duration statuses via UART.
- */
-//void uart_kernel_data_update(KernelTask* t_task);
-/**
- * Transmits the helicopter status information via UART.
+ * Task prototype to transmit the heli status information via UART.
  */
 void uart_update(void *pvParameters);
 

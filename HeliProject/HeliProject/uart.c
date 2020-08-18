@@ -25,11 +25,13 @@
  *
  ******************************************************************************/
 
+// General
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
+// Tiva M4
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "inc/hw_ints.h"
@@ -43,7 +45,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-//Heli
+// Heli
 #include "altitude.h"
 #include "pwm.h"
 #include "uart.h"
@@ -67,7 +69,6 @@ static const int UART_USB_GPIO_PIN_TX = GPIO_PIN_1;
 
 void uart_init(void)
 {
-
     // Enable GPIO port A which is used for UART0 pins.
     SysCtlPeripheralEnable(UART_USB_PERIPH_UART);
     while (!SysCtlPeripheralReady(UART_USB_PERIPH_UART));
@@ -101,20 +102,13 @@ void uart_send(const char *t_buffer)
 // UART sender task
 void uart_update(void *pvParameters)
 {
-    //static const int UART_INPUT_BUFFER_SIZE = 40;
-    /**
-     * Buffer settings for UART
-     */
-    char g_buffer[100] = {0};        //fixed the buffer size to 40
+    char g_buffer[100] = {0};        //fixed the buffer size
 
     while (1) {
-            // originals commented out and modified copies for test
-            //uint16_t target_yaw = setpoint_get_yaw();
-            int16_t target_yaw = getYawReference();//get_rand_yaw();
-            //uint16_t actual_yaw = yaw_get();
+            // modified copies for test only
+            int16_t target_yaw = getYawReference(); //get_rand_yaw();
             int16_t actual_yaw = getYaw();
 
-            //int16_t target_altitude = setpoint_get_altitude();
             int16_t target_altitude = getAltitudeReference();//(int16_t) get_rand_percent();
             int16_t actual_altitude = (int16_t) alt_get();
             uint8_t main_rotor_duty = pwm_get_main_duty();
