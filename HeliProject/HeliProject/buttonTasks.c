@@ -262,7 +262,8 @@ void CheckButtonQueue(void *pvParameters)
             }
             xSemaphoreGive(g_buttonMutex); //Gives it back
         }
-        vTaskDelay(1000 / (CHECK_QUEUE_FREQ * portTICK_RATE_MS));
+        vTaskDelay(TICKS_IN_SECOND / (CHECK_QUEUE_FREQ * portTICK_RATE_MS));
+        //vTaskDelay(TICKS_IN_SECOND / (CHECK_QUEUE_FREQ));
     }
 }
 
@@ -284,6 +285,6 @@ void QueueButtonPushes(void *pvParameters)
             CheckQueueButton(LEFT);
             CheckQueueButton(RIGHT);
         }
-        vTaskDelay(1000 / (BUTTON_QUEUE_FREQ * portTICK_RATE_MS));
+        vTaskDelay(TICKS_IN_SECOND / (BUTTON_QUEUE_FREQ * portTICK_RATE_MS));
     }
 }

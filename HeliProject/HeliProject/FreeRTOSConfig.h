@@ -73,4 +73,6 @@
 
 #define portGET_RUN_TIME_COUNTER_VALUE() xTaskGetTickCount()
 
+#define INCLUDE_uxTaskGetStackHighWaterMark 1
+
 #endif /* FREERTOSCONFIG_H_ */
