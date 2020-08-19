@@ -101,21 +101,21 @@ static Controller yawController = {
  * Accepts (pointer) controller gains, (double) error value, (enum) controller_choice
  * Returns (double) calculated control value
  */
-double pidUpdate(Controller * selectedController, double error, uint8_t controller_choice) {
+/*double pidUpdate(Controller * selectedController, double error, uint8_t controller_choice) {
     double control;
     double delta_t = (double) 1 / CONTROL_RUN_FREQ;
     selectedController->errorIntegrated += (error * delta_t);
     control = error * selectedController->pGain
             + (selectedController->errorIntegrated * selectedController->iGain);
     return control;
-}
+}*/
 
 /* Calculates error in (between current and desired) altitude and
  * calls PI control with this value.
  * Clamps the new duty (from PI control) within system limits and
  * sets the altitude PWM module value accordingly.
 */
-void setAltitudeDuty(void)
+/*void setAltitudeDuty(void)
 {
     int16_t altitudeError;
     int16_t control;
@@ -125,7 +125,7 @@ void setAltitudeDuty(void)
     control = (int16_t) pidUpdate(&altitudeController, altitudeError, ALTITUDE);
     newDuty = clamp(control, MIN_MAIN_DUTY, MAX_MAIN_DUTY);
     pwm_set_main_duty(newDuty);
-}
+}*/
 
 /*
  * Calculates error in (between current and desired) yaw and
@@ -133,7 +133,7 @@ void setAltitudeDuty(void)
  * Clamps the new duty (from PI control) within system limits and
  * sets the yaw PWM module value accordingly.
  */
- void setYawDuty(void)
+ /*void setYawDuty(void)
  {
      int16_t yawError;
      int16_t control;
@@ -165,5 +165,5 @@ void reset_yaw_error(void)
 {
     yawController.errorIntegrated = 0;
 }
-
+*/
 

@@ -48,7 +48,7 @@
 #define YAW_SETTLE_RANGE 10
 
 static SemaphoreHandle_t g_changeStateMutex;
-static int8_t g_heliState = LANDED;         //Set LANDED on initialisation
+static int8_t g_heliState = FLYING;         //Set LANDED on initialisation
 
 /***********************************Getter and setter for state******************************/
 /*
@@ -173,7 +173,7 @@ void TakeOffSequence(void)
         //Set the rotors to move so it can find the yaw reference
         //Suggest pwm_main = % and tail = %
         suspendPIDTask();
-        pwm_set_main_duty(15);      // R1 15, R2 6, R3 25, R4 25
+        pwm_set_main_duty(25);      // R1 15, R2 6, R3 25, R4 25
         pwm_set_tail_duty(5);       // R1 5, R2 32, R3 5, R4 5
 
     }
@@ -233,7 +233,7 @@ void flight_mode_FSM(void *pvParameters)
             spin360();
             break;
         }
-        vTaskDelay(1000 / (FSM_FREQ * portTICK_RATE_MS));
+        vTaskDelay(TICKS_IN_SECOND / (FSM_FREQ * portTICK_RATE_MS));
     }
 }
 

@@ -108,7 +108,9 @@ void uart_update(void *pvParameters)
     char g_buffer[100] = {0};        //fixed the buffer size
     uint8_t count = 0;
 
+
     while (1) {
+
             count++;
             // modified copies for test only
             int16_t target_yaw = getYawReference();             // get_rand_yaw();
@@ -128,13 +130,13 @@ void uart_update(void *pvParameters)
             uart_send(g_buffer);
 
             //Send the runtime stats
-//            if (count > 4)
-//            {
-//                char runtime_stats_buffer[512];
-//                vTaskGetRunTimeStats(runtime_stats_buffer);
-//                uart_send(runtime_stats_buffer);
-//                count = 0;
-//            }
-            vTaskDelay(1000 / (UART_FREQ * portTICK_RATE_MS));  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
+            if (count > 4)
+            {
+                char runtime_stats_buffer[512];
+                vTaskGetRunTimeStats(runtime_stats_buffer);
+                uart_send(runtime_stats_buffer);
+                count = 0;
+            }
+            vTaskDelay(TICKS_IN_SECOND / (portTICK_RATE_MS * UART_FREQ));  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
     }
 }

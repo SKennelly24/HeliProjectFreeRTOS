@@ -43,71 +43,60 @@
 #include "FreeRTOS/include/timers.h"
 
 TaskHandle_t PIDTaskHandle; //Hold handle so task can be resumed and suspended
-
-void load_cpu_stats(void *pvParameters)
-{
-    while (1)
-    {
-        static char runtime_stats_buffer[512];
-        vTaskGetRunTimeStats(runtime_stats_buffer);
-        //printf(runtime_stats_buffer);
-        vTaskDelay(1000 / (LOAD_FREQ * portTICK_RATE_MS));
-    }
-}
 /*
  * Creates all the FREERTOS tasks
  */
 void createTasks(void)
 {
-    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", 128, NULL, MEAS_ALTITUDE_PRIORITY, NULL))
+    if (pdTRUE != xTaskCreate(GetAltitude, "Get Altitude", ALTITUDE_STACK_SIZE, NULL, MEAS_ALTITUDE_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", 128, NULL, DISPLAY_PRIORITY, NULL))
+    if (pdTRUE != xTaskCreate(disp_Values, "Display Update", DISPLAY_STACK_SIZE, NULL, DISPLAY_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE != xTaskCreate(uart_update, "UART send", 512, NULL, UART_PRIORITY, NULL))
+    if (pdTRUE != xTaskCreate(uart_update, "UART send", UART_STACK_SIZE, NULL, UART_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(QueueButtonPushes, "Queue Button Pushes", 128, NULL, QUEUE_BUTTON_PRIORITY, NULL))
+    if (pdTRUE!= xTaskCreate(QueueButtonPushes, "Queue Button Pushes", QUEUE_BUTTON_STACK_SIZE, NULL, QUEUE_BUTTON_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(CheckButtonQueue, "Check Button Queue", 128, NULL, CHECK_QUEUE_PRIORITY, NULL))
+    if (pdTRUE!= xTaskCreate(CheckButtonQueue, "Check Button Queue", CHECK_QUEUE_STACK_SIZE, NULL, CHECK_QUEUE_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(apply_control, "PID", 128, NULL, PID_CONTROL_PRIORITY, &PIDTaskHandle))
+    if (pdTRUE!= xTaskCreate(apply_control, "PID", PID_STACK_SIZE, NULL, PID_CONTROL_PRIORITY, &PIDTaskHandle))
     {
        while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    if (pdTRUE!= xTaskCreate(flight_mode_FSM, "FSM", 128, NULL, FSM_PRIORITY, NULL))
+    if (pdTRUE!= xTaskCreate(flight_mode_FSM, "FSM", FSM_STACK_SIZE, NULL, FSM_PRIORITY, NULL))
     {
         while (1);   // Oh no! Must not have had enough memory to create the task.
     }
 
-    /*if (pdTRUE!= xTaskCreate(load_cpu_stats, "CPU_LOAD_STATS", 128, NULL, 4, NULL))
-    {
-        while (1);   // Oh no! Must not have had enough memory to create the task.
-    }*/
-
 }
 
 
-
+/*
+ * Suspends the PID task
+ */
 void suspendPIDTask(void)
 {
     vTaskSuspend(PIDTaskHandle);
 }
 
+/*
+ * Starts the PID task
+ */
 void startPIDTask(void)
 {
     vTaskResume(PIDTaskHandle);

@@ -33,7 +33,7 @@
 // Rig 1
 #define MIN_MAIN_DUTY 5
 #define MAX_MAIN_DUTY 55
-#define MIN_TAIL_DUTY 10
+#define MIN_TAIL_DUTY 5
 #define MAX_TAIL_DUTY 55
 #define MAX_YAW 360
 
@@ -157,7 +157,9 @@ void apply_control(void *pvParameters)
     {
         setAltitudeDuty();
         setYawDuty();
-        vTaskDelay(1000 / (portTICK_RATE_MS * CONTROL_RUN_FREQ));
+        vTaskDelay(TICKS_IN_SECOND / (portTICK_RATE_MS * CONTROL_RUN_FREQ));
+        //vTaskDelay(TICKS_IN_SECOND / (CONTROL_RUN_FREQ));
+
     }
 }
 

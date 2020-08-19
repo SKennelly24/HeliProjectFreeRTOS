@@ -230,9 +230,10 @@ void GetAltitude(void *pvParameters)
 {
     while (1)
     {
+
         alt_process_adc();
         alt_update();
-        vTaskDelay(1000 / (ALITUDE_MEAS_FREQ * portTICK_RATE_MS)); //  Current frequency is
+        vTaskDelay(TICKS_IN_SECOND / (portTICK_RATE_MS * ALITUDE_MEAS_FREQ)); //  Current frequency is
     }
     // No way to kill this task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }

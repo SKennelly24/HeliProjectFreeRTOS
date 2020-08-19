@@ -113,9 +113,8 @@ void disp_Values(void *pvParameters)
         //usnprintf(string, sizeof(string), " Altitude: %4d%%", get_rand_percent()));   // Test only
         OLEDStringDraw(string, 0, 3);
 
-        vTaskDelay(1000 / (DISPLAY_FREQ * portTICK_RATE_MS)); // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
+        vTaskDelay(TICKS_IN_SECOND / (DISPLAY_FREQ * portTICK_RATE_MS)); // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.
     }
-    // No way to kill this blinky task unless another task has an xTaskHandle reference to it and can use vTaskDelete() to purge it.
 }
 
 
