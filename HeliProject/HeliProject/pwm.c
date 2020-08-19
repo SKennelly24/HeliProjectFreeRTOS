@@ -80,7 +80,6 @@ static int8_t g_main_duty; //Stores the current duty cycle for the main rotor.
 static int8_t g_tail_duty; //Stores the current duty cycle for the tail rotor.
 static uint32_t g_pwm_period; // Stores the PWM period. This is used for some duty cycle calculations.
 
-
 //-------------------------------------------------------------------------------
 
 /*

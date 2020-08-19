@@ -86,7 +86,7 @@ int main(void)
 {
     initialise();
 
-    // Render splash screen for a couple of seconds
+    // Render splash screen for a few seconds
     disp_calibration();
     utils_wait_for_seconds(SPLASH_SCREEN_WAIT_TIME);
     disp_advance_state();

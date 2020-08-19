@@ -7,7 +7,7 @@
  * Manu Hamblyn
  *
  * ---------------------------------------------------------------------------
- * Provides the function to set and get and change altitude and yaw references
+ * Provides the functions to set and get and change altitude and yaw references
  */
 
 #ifndef REFERENCES_H_

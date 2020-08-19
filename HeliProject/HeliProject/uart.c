@@ -108,24 +108,24 @@ void uart_update(void *pvParameters)
     char g_buffer[100] = {0};        //fixed the buffer size
     uint8_t count = 0;
 
-
     while (1) {
 
             count++;
             // modified copies for test only
-            int16_t target_yaw = getYawReference();             // get_rand_yaw();
+            int16_t target_yaw = getYawReference();             // Test only use get_rand_yaw();
             int16_t actual_yaw = getYaw();
 
-            int16_t target_altitude = getAltitudeReference();   // get_rand_percent();
+            int16_t target_altitude = getAltitudeReference();   // Test only use get_rand_percent();
             int16_t actual_altitude = (int16_t) alt_get();
 
             uint8_t main_rotor_duty = pwm_get_main_duty();
-            //uint8_t main_rotor_duty = (int8_t) get_rand_percent();
+            //uint8_t main_rotor_duty = (int8_t) get_rand_percent(); // Test only
             uint8_t tail_rotor_duty = pwm_get_tail_duty();
-            //uint8_t tail_rotor_duty = (int8_t) get_rand_percent();
+            //uint8_t tail_rotor_duty = (int8_t) get_rand_percent(); // Test only
 
             uint8_t operating_mode = getState();
             //uint8_t operating_mode = IN_FLIGHT; // Test only
+
             usprintf(g_buffer, "t_y:%d, y:%d, t_a:%d, a:%d, st:%d, m_d:%d, t_d:%d\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, operating_mode, main_rotor_duty, tail_rotor_duty);
             uart_send(g_buffer);
 
