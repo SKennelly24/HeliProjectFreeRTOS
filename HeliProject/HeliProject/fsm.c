@@ -105,13 +105,13 @@ bool yawInSettleRange(int16_t currentYaw)
  */
 void setSpinTarget(int16_t currentYaw, int16_t add_amount) {
     int16_t target = currentYaw + add_amount;
-    if (target > -1 && target < MAX_YAW)
+    if (target > -1 && target < MAX_DEGREE)
     {
         setYawReference(target);
     } else if (target < 0){
-        setYawReference(target + MAX_YAW);
+        setYawReference(target + MAX_DEGREE);
     } else {
-        setYawReference(target - MAX_YAW);
+        setYawReference(target - MAX_DEGREE);
     }
 }
 
