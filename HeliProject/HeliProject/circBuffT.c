@@ -4,8 +4,10 @@
 //
 // Support for a circular buffer of uint32_t values on the
 //  Tiva processor.
+//
 // Written by
-// - P.J. Bones UCECE
+// - P.J. Bones UC ECE
+//
 // Modified by
 // - Sarah Kennelly
 // - Derrick Edward

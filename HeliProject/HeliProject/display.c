@@ -18,14 +18,18 @@
  *
  ******************************************************************************/
 
+// Standard modules
 #include <stdint.h>
 
+// Tiva M4 modules
 #include "OrbitOLED/OrbitOLEDInterface.h"
 #include "utils/ustdlib.h"
 
+// Free RTOS modules
 #include "FreeRTOS.h"
 #include "task.h"
 
+// Heli modules
 #include "altitude.h" //commented out for test
 #include "display.h"
 #include "pwm.h"      //commented out for test
@@ -33,24 +37,9 @@
 #include "taskDefinitions.h"
 #include "uart.h"
 
-/**
- * Enum of all states the display can be in. Cycled by pressing BTN2
- */
-enum disp_state
-{
-    DISP_STATE_CALIBRATION, DISP_STATE_ALL, DISP_STATE_TOTAL
-};
-typedef enum disp_state DisplayState;
-
 
 /**
- * Current display state
- */
-static uint8_t g_displayState = DISP_STATE_CALIBRATION;
-
-
-/**
- * Display raw 12-bit adc reading to the display
+ * Clear the display.
  */
 void disp_clear(void)
 {
@@ -74,18 +63,6 @@ void disp_calibration(void)
 
 
 /**
- * Advance display state when BTN2 is pressed
- */
-void disp_advance_state(void)
-{
-    if (++g_displayState >= DISP_STATE_TOTAL)
-    {
-        g_displayState = DISP_STATE_CALIBRATION + 1;
-    }
-}
-
-
-/**
  * Task to display yaw and altitude percentage at the same time
  */
 void disp_Values(void *pvParameters)
@@ -94,7 +71,6 @@ void disp_Values(void *pvParameters)
 
     while (1)
     {
-
         usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
         OLEDStringDraw(string, 0, 0);
 

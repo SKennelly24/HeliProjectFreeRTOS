@@ -23,6 +23,8 @@
  * Functions are provided to initialise, calibrate, update and return
  * the altitude values.
  *
+ * Original code from P. J. Bones included and referenced.
+ *
  ******************************************************************************/
 // Standard modules
 #include <stdint.h>
@@ -229,7 +231,6 @@ void GetAltitude(void *pvParameters)
 {
     while (1)
     {
-
         alt_process_adc();
         alt_update();
         vTaskDelay(TICKS_IN_SECOND / (portTICK_RATE_MS * ALITUDE_MEAS_FREQ)); //  Current frequency is

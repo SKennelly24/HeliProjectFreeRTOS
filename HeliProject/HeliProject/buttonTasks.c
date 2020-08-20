@@ -37,7 +37,7 @@
 #include "taskDefinitions.h"
 #include "references.h"
 
-// RTOS
+// RTOS modules
 #include "FreeRTOS.h"
 #include "task.h"
 #include "FreeRTOS/include/queue.h"
@@ -100,7 +100,6 @@ void initButtonTasks(void)
 }
 
 /****************************Altering semaphore values****************************************/
-
 /*
  * Change the timer state to the given state
  */
@@ -127,7 +126,6 @@ void QueueButton(uint8_t button)
 
 
 /****************************Timer helper functions****************************************/
-
 /*
  * When the timer finishes this is called,
  * changes the timer state to ensure button is then queued
@@ -212,8 +210,6 @@ void CheckQueueButton(uint8_t button)
         QueueButton(button);
     }
 }
-
-
 
 
 /* Given the pressed button from the queue
