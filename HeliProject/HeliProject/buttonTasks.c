@@ -72,12 +72,13 @@ void FinishTimer(TimerHandle_t finishedTimer);
 
 /****************************Initialises values****************************************/
 /*
- * Initialise the button queue
+ * Initialise the button queue and the buttons
  */
 void initButtonQueue(void)
 {
     g_buttonQueue = xQueueCreate(QUEUE_SIZE, sizeof(uint8_t));
     g_buttonMutex = xSemaphoreCreateMutex();
+    initButtons();
 }
 
 /*

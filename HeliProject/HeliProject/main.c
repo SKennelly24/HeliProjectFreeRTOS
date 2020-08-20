@@ -32,17 +32,13 @@
 
 // Heli modules
 #include "display.h"
-#include "utils.h"
-#include "altitude.h"
 #include "uart.h"
 #include "pwm.h"
-#include "yaw.h"
-#include "buttons.h"
-#include "pidControl.h"
 #include "buttonTasks.h"
 #include "fsm.h"
 #include "taskDefinitions.h"
 #include "references.h"
+#include "utils.h"
 
 // RTOS modules
 #include "FreeRTOS.h"
@@ -66,15 +62,12 @@ void initialise(void)
     SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
     SYSCTL_XTAL_16MHZ);
 
-    //Initialisation things for tasks
-    alt_init();         // Altitude and ADC
+    //Initialisation things for tasks         // Altitude and ADC
     disp_init();        // Display
     uart_init();        // UART
     pwm_init();         // PWM (overwrites LED)
     initButtonTasks();  //
-    initButtons();      //
-    initFSM();          // Finite state machine
-    initYaw();          // Yaw system (state machine, counters, zero reference)
+    initFSM();          // Finite state machine          // Yaw system (state machine, counters, zero reference)
     initReferences();   // Set up Altitude, Yaw, Button & Queue references
 
     // Enable interrupts to the processor.

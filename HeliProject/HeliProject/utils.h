@@ -53,39 +53,10 @@
 
 /**
  * Waits for `t_delay` seconds before returning. Note that this is
- * approximately correct but will not be exact and should not be used as a 
+ * approximately correct but will not be exact and should not be used as a
  * reliable timer.
  */
 void utils_wait_for_seconds(uint32_t t_delay);
 
-/**
- * A simple truth.
- */
-#define MORE_THAN_HALF_THE_HELIRIGS_ARE_BROKEN true
-
-/**
- * This was previously also thought to be one of the only constants in
- * an ever-changing universe. However, entropy took over and our
- * results came in.
- */
-#define WE_STILL_HAVENT_GOTTEN_OUR_MIDTERM_TEST_RESULTS_BACK false
-
-/**
- * Returns a (semi) random int between 0 and 100.
- * For testing.
- */
-int get_rand_percent();
-
-/**
- * Returns a (semi) random int between 0 and 360.
- * For testing.
- */
-int get_rand_yaw();
-
-/**
- * Returns a valid flight mode (uses random int between 0 and 2)
- * For testing.
- */
-int get_rand_FlightMode();
 
 #endif /* UTILS_H_ */

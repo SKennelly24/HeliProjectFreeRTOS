@@ -29,7 +29,6 @@
 #include "altitude.h" //commented out for test
 #include "display.h"
 #include "pwm.h"      //commented out for test
-#include "utils.h"
 #include "yaw.h"      //commented out for test
 #include "taskDefinitions.h"
 #include "uart.h"
@@ -97,20 +96,15 @@ void disp_Values(void *pvParameters)
     {
 
         usnprintf(string, sizeof(string), "Main Duty: %4d%%", pwm_get_main_duty());
-        //usnprintf(string, sizeof(string), "Main Duty: %4d%%", get_rand_percent());    // Test only
         OLEDStringDraw(string, 0, 0);
 
         usnprintf(string, sizeof(string), "Tail Duty: %4d%%", pwm_get_tail_duty());
-        //usnprintf(string, sizeof(string), "Tail Duty: %4d%%", get_rand_percent());    // Test only
         OLEDStringDraw(string, 0, 1);
 
-        //usnprintf(string, sizeof(string), "      Yaw: %4d%c", yaw_get(), DISP_SYMBOL_DEGREES);
-        //usnprintf(string, sizeof(string), "      Yaw: %4d%c", get_rand_yaw(), DISP_SYMBOL_DEGREES); // Test only
         usnprintf(string, sizeof(string), "      Yaw: %4d%c", getYaw(), DISP_SYMBOL_DEGREES);
         OLEDStringDraw(string, 0, 2);
 
         usnprintf(string, sizeof(string), " Altitude: %4d%%", alt_get());
-        //usnprintf(string, sizeof(string), " Altitude: %4d%%", get_rand_percent()));   // Test only
         OLEDStringDraw(string, 0, 3);
 
         vTaskDelay(TICKS_IN_SECOND / (DISPLAY_FREQ * portTICK_RATE_MS)); // Suspend this task (so others may run) for 1000ms or as close as we can get with the current RTOS tick setting.

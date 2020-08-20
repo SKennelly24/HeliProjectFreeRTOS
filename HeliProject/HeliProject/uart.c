@@ -50,7 +50,6 @@
 #include "pwm.h"
 #include "uart.h"
 #include "yaw.h"
-#include "utils.h"
 #include "references.h"
 #include "fsm.h"
 #include "taskDefinitions.h"
@@ -119,24 +118,21 @@ void uart_update(void *pvParameters)
             int16_t actual_altitude = (int16_t) alt_get();
 
             uint8_t main_rotor_duty = pwm_get_main_duty();
-            //uint8_t main_rotor_duty = (int8_t) get_rand_percent(); // Test only
             uint8_t tail_rotor_duty = pwm_get_tail_duty();
-            //uint8_t tail_rotor_duty = (int8_t) get_rand_percent(); // Test only
 
             uint8_t operating_mode = getState();
-            //uint8_t operating_mode = IN_FLIGHT; // Test only
 
             usprintf(g_buffer, "t_y:%d, y:%d, t_a:%d, a:%d, st:%d, m_d:%d, t_d:%d\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, operating_mode, main_rotor_duty, tail_rotor_duty);
             uart_send(g_buffer);
 
             //Send the runtime stats
-            if (count > 4)
+            /*if (count > 4)
             {
                 char runtime_stats_buffer[512];
                 vTaskGetRunTimeStats(runtime_stats_buffer);
                 uart_send(runtime_stats_buffer);
                 count = 0;
-            }
+            }*/
             vTaskDelay(TICKS_IN_SECOND / (portTICK_RATE_MS * UART_FREQ));  // Suspend this task (so others may run) for 500ms or as close as we can get with the current RTOS tick setting.
     }
 }

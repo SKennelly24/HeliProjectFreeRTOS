@@ -38,7 +38,6 @@
 // Heli modules
 #include "altitude.h"
 #include "circBuffT.h"
-#include "utils.h"
 #include "taskDefinitions.h"
 
 // RTOS modules

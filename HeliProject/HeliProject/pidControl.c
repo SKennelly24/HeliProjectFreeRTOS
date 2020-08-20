@@ -19,9 +19,9 @@
 #include "altitude.h"
 #include "yaw.h"
 #include "pwm.h"
-#include "utils.h"
 #include "taskDefinitions.h"
 #include "references.h"
+#include "utils.h"
 
 //Free RTOS modules
 #include "FreeRTOS.h"
@@ -29,14 +29,16 @@
 #include "FreeRTOS/include/queue.h"
 #include "FreeRTOS/include/semphr.h"
 
+
 // Main and Tail duty limits
 // Rig 1
+/*
 #define MIN_MAIN_DUTY 5
 #define MAX_MAIN_DUTY 55
 #define MIN_TAIL_DUTY 5
 #define MAX_TAIL_DUTY 55
 #define MAX_YAW 360
-
+*/
 
 // Rig 2
 /*
@@ -63,6 +65,12 @@
 #define MAX_YAW 360
 */
 
+// Generic
+#define MIN_MAIN_DUTY 20
+#define MAX_MAIN_DUTY 65
+#define MIN_TAIL_DUTY 18
+#define MAX_TAIL_DUTY 65
+#define MAX_YAW 360
 
 /*
  * Select YAW or ALTITIDE control
@@ -91,7 +99,7 @@ static Controller altitudeController = {
 */
 static Controller yawController = {
                                        .pGain = 0.41, //R1 .41, R2 .45, R3 .51
-                                       .iGain = 0.23, //R1 .23, R2 .45, R3 .25
+                                       .iGain = 0.24, //R1 .23, R2 .45, R3 .25
                                        .errorIntegrated = 0.0
 };
 // *************************************************************

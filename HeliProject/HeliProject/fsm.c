@@ -48,7 +48,7 @@
 #define YAW_SETTLE_RANGE 10
 
 static SemaphoreHandle_t g_changeStateMutex;
-static int8_t g_heliState = FLYING;         //Set LANDED on initialisation
+static int8_t g_heliState = LANDED;         //Set LANDED on initialisation
 
 /***********************************Getter and setter for state******************************/
 /*

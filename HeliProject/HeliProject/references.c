@@ -52,12 +52,14 @@ static int32_t g_yawReference = 0;
 
 /***********************************Initiliases******************************/
 /*
- * Initialises References
+ * Initialises References, yaw and altitude
  */
 void initReferences(void)
 {
     g_altitudeMutex = xSemaphoreCreateMutex();
     g_yawMutex = xSemaphoreCreateMutex();
+    initYaw();
+    alt_init();
 }
 
 
