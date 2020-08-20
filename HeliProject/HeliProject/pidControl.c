@@ -101,7 +101,7 @@ static Controller yawController = {
  * Accepts (pointer) controller gains, (double) error value, (enum) controller_choice
  * Returns (double) calculated control value
  */
-double pidUpdate(Controller * selectedController, double error, uint8_t controller_choice) {
+double pidUpdate(Controller * selectedController, double error) {
     double control;
     double delta_t = (double) 1 / CONTROL_RUN_FREQ;
     selectedController->errorIntegrated += (error * delta_t);
@@ -122,7 +122,7 @@ void setAltitudeDuty(void)
     int16_t newDuty;
 
     altitudeError = getAltitudeReference() - alt_get();
-    control = (int16_t) pidUpdate(&altitudeController, altitudeError, ALTITUDE);
+    control = (int16_t) pidUpdate(&altitudeController, altitudeError);
     newDuty = clamp(control, MIN_MAIN_DUTY, MAX_MAIN_DUTY);
     pwm_set_main_duty(newDuty);
 }
@@ -144,7 +144,7 @@ void setAltitudeDuty(void)
           yawError = copysign(MAX_YAW - abs(yawError), -yawError);
       }
 
-      control = (int16_t) pidUpdate(&yawController, yawError, YAW);
+      control = (int16_t) pidUpdate(&yawController, yawError);
       newDuty = clamp(control, MIN_TAIL_DUTY, MAX_TAIL_DUTY);
       pwm_set_tail_duty(newDuty);
  }
