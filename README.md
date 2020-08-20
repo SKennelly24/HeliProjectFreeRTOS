@@ -5,7 +5,7 @@
 * Sarah Kennelly (sek40 76389950)
 * Manu Hamblyn (mfb31 95140875)
 
-## Folders
+## Directories
 
 ### ExampleProject
 The CCS workspace for the example project with the blinky task working
