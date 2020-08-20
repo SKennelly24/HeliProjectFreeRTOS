@@ -42,12 +42,14 @@
 #define PHASE_A_INT_PIN     GPIO_INT_PIN_0          // Interrupt On Phase A Pin
 #define PHASE_B_INT_PIN     GPIO_INT_PIN_1          // Interrupt On Phase B Pin
 
+// General
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
 #include <ctype.h>
 #include <yaw.h>
 
+// Tiva / M4
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"

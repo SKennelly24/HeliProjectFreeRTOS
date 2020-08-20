@@ -18,8 +18,8 @@
  *  - Jesse Sheehan <jps111@uclive.ac.nz>   53366509
  * 
  * Description:
- * This module contains simple functions used in several places throughout this
- * project.
+ * This module contains simple helper functions used in several places throughout
+ * this project.
  * 
  ******************************************************************************/
 #include <stdint.h>

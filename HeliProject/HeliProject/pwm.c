@@ -1,6 +1,6 @@
 /*******************************************************************************
  *
- * pwmGen.c
+ * pwm.c
  *
  * Modified for ENCE464-20S2 Group 18
  * 2020_07_28 by:
@@ -30,14 +30,15 @@
  *    the frequency controlled by UP and DOWN buttons in
  *    the range 50 Hz to 400 Hz.
  *
- * P.J. Bones   UCECE
+ * P.J. Bones   UC ECE
  * Last modified:  7.2.2018
  *
  **********************************************************/
-
+// Standard modules
 #include <stdint.h>
 #include <stdbool.h>
 
+// Tiva M4 modules
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
 #include "driverlib/pin_map.h"
@@ -45,6 +46,7 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/pwm.h"
 
+// Heli modules
 #include "pwm.h"
 #include "utils.h"
 

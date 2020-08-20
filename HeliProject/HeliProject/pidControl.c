@@ -4,7 +4,7 @@
  *  Created on: 12/08/2020
  *  Author: sek40
  *  ----------------------------------------
- *  Implementation of PID controller
+ *  Implementation of PI controller
  */
 
 // General modules

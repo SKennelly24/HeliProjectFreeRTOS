@@ -125,7 +125,7 @@ void uart_update(void *pvParameters)
             usprintf(g_buffer, "t_y:%d, y:%d, t_a:%d, a:%d, st:%d, m_d:%d, t_d:%d\r\n", target_yaw, actual_yaw, target_altitude, actual_altitude, operating_mode, main_rotor_duty, tail_rotor_duty);
             uart_send(g_buffer);
 
-            //Send the runtime stats
+            // Send the runtime stats (for profiling)
             /*if (count > 4)
             {
                 char runtime_stats_buffer[512];

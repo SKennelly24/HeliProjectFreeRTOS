@@ -1,7 +1,7 @@
 // *******************************************************
 // pidControl.h
 //
-// Header file for the PID control
+// Header file for the PI control
 // Prototypes to set main and tail duty using PI control
 // to get to the desired yaw and altitude
 //
@@ -14,6 +14,7 @@
 #ifndef PIDCONTROL_H_
 #define PIDCONTROL_H_
 
+// Standard modules
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,7 +27,7 @@ typedef struct {
     double pGain;
     double iGain;
     double errorIntegrated;
-}Controller;
+} Controller;
 
 /*
  * Task for setting the duty of the main and tail rotor,
