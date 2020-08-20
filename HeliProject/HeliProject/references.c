@@ -82,18 +82,13 @@ void setAltitudeReference(int32_t new_altitude)
 /*
  * Sets the yaw reference
  */
-bool setYawReference(int16_t new_yaw)
+void setYawReference(int16_t new_yaw)
 {
-    bool worked;
     if (xSemaphoreTake(g_yawMutex, (TickType_t) 10) == true) //Take mutex
     {
         g_yawReference = new_yaw;
         xSemaphoreGive(g_yawMutex); //give mutex
-        worked = true;
-    } else {
-        worked = false;
     }
-    return worked;
 }
 
 int32_t getAltitudeReference(void)
