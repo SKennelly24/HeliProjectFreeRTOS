@@ -54,6 +54,7 @@
 #include "fsm.h"
 #include "taskDefinitions.h"
 
+#define BUFF_SIZE 100
 
 /**
  * Define hardware settings for the UART
@@ -104,7 +105,7 @@ void uart_update(void *pvParameters)
     /**
      * Buffer settings for UART
      */
-    char g_buffer[100] = {0};        //fixed the buffer size
+    char g_buffer[BUFF_SIZE] = {0};        //fixed the buffer size
     uint8_t count = 0;
 
     while (1) {
