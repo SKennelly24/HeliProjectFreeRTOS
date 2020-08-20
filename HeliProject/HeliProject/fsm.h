@@ -16,6 +16,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#define MAX_YAW 360
+
 /*
  * Definitions for the possible heli states
  */
