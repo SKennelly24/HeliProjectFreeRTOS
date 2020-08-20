@@ -82,7 +82,8 @@ int main(void)
     // Render splash screen for a few seconds
     disp_calibration();
     utils_wait_for_seconds(SPLASH_SCREEN_WAIT_TIME);
-    disp_advance_state();
+    //disp_advance_state(); // Test only
+    //disp_clear();         // Test only
 
     // Initialise tasks
     createTasks();
