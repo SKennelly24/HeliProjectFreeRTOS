@@ -132,11 +132,11 @@ void UpdateReferences(int8_t pressed_button)
         }
         break;
     case RIGHT:
-        if (g_yawReference < (359 - YAW_CHANGE))
+        if (g_yawReference < ((MAX_DEGREE-1) - YAW_CHANGE))
         {
             setYawReference(g_yawReference + YAW_CHANGE);
         } else {
-            setYawReference(g_yawReference + YAW_CHANGE - MAX_YAW);
+            setYawReference(g_yawReference + YAW_CHANGE - MAX_DEGREE);
         }
         break;
     case LEFT:
@@ -144,7 +144,7 @@ void UpdateReferences(int8_t pressed_button)
         {
             setYawReference(g_yawReference - YAW_CHANGE);
         } else {
-            setYawReference(g_yawReference - YAW_CHANGE + MAX_YAW);
+            setYawReference(g_yawReference - YAW_CHANGE + MAX_DEGREE);
         }
         break;
     }
