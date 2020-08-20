@@ -44,7 +44,7 @@
 #include "FreeRTOS/include/semphr.h"
 #include "FreeRTOS/include/timers.h"
 
-
+#define MAX_YAW 360
 #define YAW_SETTLE_RANGE 10
 
 static SemaphoreHandle_t g_changeStateMutex;
@@ -106,13 +106,13 @@ bool yawInSettleRange(int16_t currentYaw)
  */
 void setSpinTarget(int16_t currentYaw, int16_t add_amount) {
     int16_t target = currentYaw + add_amount;
-    if (target > -1 && target < 360)
+    if (target > -1 && target < MAX_YAW)
     {
         setYawReference(target);
     } else if (target < 0){
-        setYawReference(target + 360);
+        setYawReference(target + MAX_YAW);
     } else {
-        setYawReference(target - 360);
+        setYawReference(target - MAX_YAW);
     }
 }
 
