@@ -165,7 +165,7 @@ int16_t getAltitudePercent(int32_t sample_mean_adc)
     //Converts ADC to percentage
     else
     {
-        return (int16_t) ((adc_change * 100) / ADC_RANGE);
+        return (int16_t) ((adc_change * MAX_HEIGHT) / ADC_RANGE);
     }
 }
 
