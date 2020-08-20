@@ -72,14 +72,6 @@
 #define MAX_TAIL_DUTY 65
 #define MAX_YAW 360
 
-/*
- * Select YAW or ALTITIDE control
- */
-typedef enum CONTROLLER_CHOICE
-{
-    ALTITUDE = 0,
-    YAW,
-} CONTROLLER_CHOICE;
 
 // *************************************************************
 // Proportional and Integral gains.
