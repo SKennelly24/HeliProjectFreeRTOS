@@ -70,4 +70,4 @@ void alt_reset_calibration_state(void);
  */
 void GetAltitude(void *pvParameters);
 
-#endif
+#endif /*ALTITUDE_H_*/
