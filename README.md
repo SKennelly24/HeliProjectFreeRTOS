@@ -1,9 +1,9 @@
 # ENCE464 Group 18
 
 ## Team Members
-Derrick Edward
-Sarah Kennelly
-Manu Hamblyn
+Markup : * Derrick Edward
+         * Sarah Kennelly
+         * Manu Hamblyn
 
 ## Folders
 
