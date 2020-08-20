@@ -44,7 +44,6 @@
 #include "FreeRTOS/include/semphr.h"
 #include "FreeRTOS/include/timers.h"
 
-#define MAX_YAW 360
 #define YAW_SETTLE_RANGE 10
 
 static SemaphoreHandle_t g_changeStateMutex;
