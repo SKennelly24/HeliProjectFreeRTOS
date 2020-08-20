@@ -44,6 +44,7 @@
 
 // Yaw increment for button press
 #define YAW_CHANGE 15
+#define ALT_CHANGE 10
 
 static SemaphoreHandle_t g_altitudeMutex;
 static int32_t g_altitudeReference = 0;
@@ -109,10 +110,10 @@ void UpdateReferences(int8_t pressed_button)
     switch (pressed_button)
     {
     case UP:
-        if (g_altitudeReference < (MAX_HEIGHT - 10))
+        if (g_altitudeReference < (MAX_HEIGHT - ALT_CHANGE))
         { //If not within 10% of max altitude
 
-            setAltitudeReference(g_altitudeReference + 10);
+            setAltitudeReference(g_altitudeReference + ALT_CHANGE);
         }
         else
         {
@@ -121,9 +122,9 @@ void UpdateReferences(int8_t pressed_button)
         break;
     case DOWN:
         // Checks lower limits of altitude if down button is pressed
-        if (g_altitudeReference > 10)
+        if (g_altitudeReference > ALT_CHANGE)
         {
-            setAltitudeReference(g_altitudeReference - 10);
+            setAltitudeReference(g_altitudeReference - ALT_CHANGE);
         }
         else
         {
@@ -135,7 +136,7 @@ void UpdateReferences(int8_t pressed_button)
         {
             setYawReference(g_yawReference + YAW_CHANGE);
         } else {
-            setYawReference(g_yawReference + YAW_CHANGE - 360);
+            setYawReference(g_yawReference + YAW_CHANGE - MAX_YAW);
         }
         break;
     case LEFT:
@@ -143,7 +144,7 @@ void UpdateReferences(int8_t pressed_button)
         {
             setYawReference(g_yawReference - YAW_CHANGE);
         } else {
-            setYawReference(g_yawReference - YAW_CHANGE + 360);
+            setYawReference(g_yawReference - YAW_CHANGE + MAX_YAW);
         }
         break;
     }
