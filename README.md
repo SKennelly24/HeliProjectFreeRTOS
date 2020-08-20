@@ -15,7 +15,7 @@ The FreeRTOS folder with all the files required to run it
 The CCS workspace for our helicopter project
 ### ENCE361-fri_am_group_7-master 
 Manu's old git repo from ENCE361, given with permission from other team members
-## ENCE361-thu_am_group_18-master
+### ENCE361-thu_am_group_18-master
 Derrick's old git repo from ENCE361, given with permission from other team members
-## ENCE361-tue_am_group_1-master
+### ENCE361-tue_am_group_1-master
 Sarah's old git repo from ENCE361, given with permission from other team members
