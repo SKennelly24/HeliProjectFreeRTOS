@@ -24,6 +24,8 @@
  *
  * ***************************************************************/
 
+#define MAX_DEGREE 360
+
 /*
  * Initialises the interrupts and GPIO pins for the yaw and yaw reference
  */
