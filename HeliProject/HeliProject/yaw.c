@@ -218,9 +218,9 @@ void QDIntHandler(void)
 int16_t getYaw(void)
 {
     IntMasterDisable();
-    int16_t yawDeg = (double) (YAW * 360) / MAX_YAW;
+    int16_t yawDeg = (double) (YAW * MAX_DEGREE) / MAX_YAW;
     if (yawDeg < 0) {
-        yawDeg += 360;
+        yawDeg += MAX_DEGREE;
     }
     IntMasterEnable();
     return yawDeg;
